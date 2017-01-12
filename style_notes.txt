@@ -1,0 +1,7 @@
+I decide to use C++11 for this project.  Doing so has several advantages:
+
+1. we can return objects instead of references because C++11 has good
+   optimizations.
+
+2. we can return non-const objects because again, C++11 has great
+   optimizations.
