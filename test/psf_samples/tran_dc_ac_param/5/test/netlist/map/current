@@ -1,0 +1,26 @@
+( ( nil
+  version "2.1"
+  mapType "incremental"
+  blockName "tran_test"
+  repList "spectre cmos_sch cmos.sch schematic veriloga"
+  stopList "spectre"
+  globalList "gnd!"
+  hierDelim "."
+  netlistDir "/tools/scratch/erichang/simulation/adc_sampler_2/tran_test/adexl/results/data/Interactive.9/5/test/netlist"
+ )
+( instViewTable
+ )
+( net
+( "gnd!" "0" )
+ )
+( inst
+ )
+( model
+( "adc_sampler_2/tran_test/schematic" "tran_test" )
+ )
+( term
+ )
+( param
+ )
+( "tran_test" "ihnl/cds0/map" )
+ )

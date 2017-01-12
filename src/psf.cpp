@@ -68,7 +68,11 @@ namespace psf {
         }
         
         std::size_t cur_idx = start_idx + WORD_SIZE;
+
         std::size_t end_idx = GET_I32(start + cur_idx);
+        cur_idx += WORD_SIZE;
+        DEBUG_MSG("Prop section end location = " << end_idx);
+
         while(cur_idx < end_idx) {
             cur_idx += deserialize_entry(start + cur_idx, end_marker, pdict);
             DEBUG_MSG("Cursor location = " << cur_idx);

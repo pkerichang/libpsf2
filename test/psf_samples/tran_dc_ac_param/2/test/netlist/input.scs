@@ -1,0 +1,38 @@
+// Generated for: spectre
+// Generated on: Jan 11 23:02:55 2017
+// Design library name: adc_sampler_2
+// Design cell name: tran_test
+// Design view name: schematic
+simulator lang=spectre
+global 0
+parameters cap=1p res=1000 vdc=0.5
+include "/tools/tstech16/CLN16FFC/PDK/tsmcN16/../models/toplevel.scs" section=top_tt
+
+// Library name: adc_sampler_2
+// Cell name: tran_test
+// View name: schematic
+C1 (vo2 0) capacitor c=cap
+C0 (vo1 0) capacitor c=cap
+R2 (0 vo2) resistor r=res
+R1 (vo1 vo2) resistor r=res
+R0 (vin vo1) resistor r=res
+V0 (vin 0) vsource dc=vdc mag=1 type=pulse val0=0 val1=1 period=100n \
+        delay=100p rise=1p fall=1p width=50n
+simulatorOptions options reltol=1e-3 vabstol=1e-6 iabstol=1e-12 temp=27 \
+    tnom=27 scalem=1.0 scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 \
+    digits=5 cols=80 pivrel=1e-3 sensfile="../psf/sens.output" \
+    checklimitdest=psf 
+tran tran stop=100n errpreset=conservative write="spectre.ic" \
+    writefinal="spectre.fc" annotate=status maxiters=5 
+finalTimeOP info what=oppoint where=rawfile
+dcOp dc write="spectre.dc" maxiters=150 maxsteps=10000 annotate=status
+dcOpInfo info what=oppoint where=rawfile
+ac ac start=10e3 stop=100e9 annotate=status 
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts  where=rawfile
+save vin vo1 vo2 V0:p 
+saveOptions options save=selected

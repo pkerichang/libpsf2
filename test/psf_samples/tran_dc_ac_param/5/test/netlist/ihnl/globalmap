@@ -1,0 +1,12 @@
+CADENCE IHNL01070
+$model
+adc_sampler_2/tran_test/schematic tran_test
+$endmodel
+$net
+gnd! 0
+$endnet
+$param
+cap cap
+res res
+vdc vdc
+$endparam

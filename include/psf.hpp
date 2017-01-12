@@ -14,6 +14,8 @@
 #include <boost/variant.hpp>
 #include <boost/asio.hpp>
 
+#define DEBUG
+
 #ifdef DEBUG
 #include <iostream>
 #define DEBUG_MSG(str) do { std::cout << str << std::endl; } while( false )

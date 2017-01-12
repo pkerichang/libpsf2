@@ -1,0 +1,318 @@
+
+Cadence (R) Virtuoso (R) Spectre (R) Circuit Simulator
+Version 15.1.0.644.isr13 64bit -- 22 Oct 2016
+Copyright (C) 1989-2016 Cadence Design Systems, Inc. All rights reserved worldwide. Cadence, Virtuoso and Spectre are registered trademarks of Cadence Design Systems, Inc. All others are the property of their respective holders.
+
+Includes RSA BSAFE(R) Cryptographic or Security Protocol Software from RSA Security, Inc.
+
+User: erichang   Host: bwrcr820-2.eecs.berkeley.edu   HostID: 2080343F   PID: 48014
+Memory  available: 10.5241 GB  physical: 270.8262 GB
+Linux   : Red Hat Enterprise Linux Server release 6.6 (Santiago)
+CPU Type: Intel(R) Xeon(R) CPU E5-4650 v2 @ 2.40GHz
+All processors running at 2399.9 MHz
+        Socket: Processors (Hyperthreaded Processor)
+        0:       0 ( 20 ),  2 ( 22 ),  4 ( 24 ),  6 ( 26 ),  8 ( 28 )
+                10 ( 30 ), 12 ( 32 ), 14 ( 34 ), 16 ( 36 ), 18 ( 38 )
+        1:       1 ( 21 ),  3 ( 23 ),  5 ( 25 ),  7 ( 27 ),  9 ( 29 )
+                11 ( 31 ), 13 ( 33 ), 15 ( 35 ), 17 ( 37 ), 19 ( 39 )
+        
+System load averages (1min, 5min, 15min) : 1.1 %, 0.8 %, 0.6 %
+Hyperthreading is enabled
+
+
+Simulating `input.scs' on bwrcr820-2.eecs.berkeley.edu at 11:02:58 PM, Wed Jan 11, 2017 (process id: 48014).
+Current working directory: /tools/scratch/erichang/simulation/adc_sampler_2/tran_test/adexl/results/data/Interactive.9/6/test/netlist
+Environment variable:
+    SPECTRE_DEFAULTS=-E
+Command line:
+    /tools/cadence/MMSIM/MMSIM151/tools/bin/spectre -64 input.scs  \
+        +escchars +log ../psf/spectre.out -format psfbin -raw ../psf  \
+        +lqtimeout 900 -maxw 5 -maxn 5 +logstatus
+
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libinfineon_sh.so ...
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libphilips_o_sh.so ...
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libphilips_sh.so ...
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libsparam_sh.so ...
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libstmodels_sh.so ...
+Reading file:  /tools/scratch/erichang/simulation/adc_sampler_2/tran_test/adexl/results/data/Interactive.9/6/test/netlist/input.scs
+Reading file:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/configs/spectre.cfg
+Reading file:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/configs/mapsubckt.cfg
+Reading link:  /tools/tstech16/CLN16FFC/PDK/tsmcN16/../models/toplevel.scs
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/toplevel.scs.bwrc
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2_usage.scs
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2.scs
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/tmi.cfg
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2_aux.scs
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/res_metal.scs
+Time for NDB Parsing: CPU = 546.916 ms, elapsed = 732.908 ms.
+Time accumulated: CPU = 571.912 ms, elapsed = 732.912 ms.
+Peak resident memory used = 51.4 Mbytes.
+
+
+The CPU load for active processors is :
+        Spectre  0 (44.4 %)      1 (5.6 %)       2 (83.6 %)      3 (4.2 %)
+                 4 (19.2 %)      6 (30.1 %)      8 (17.8 %)     10 (24.7 %)
+                12 (1.4 %)      15 (1.4 %)      16 (6.8 %)      18 (5.4 %)
+                20 (4.1 %)      21 (13.9 %)     22 (54.2 %)     23 (9.7 %)
+                24 (6.9 %)      25 (15.1 %)     26 (4.2 %)      27 (12.3 %)
+                28 (2.8 %)      29 (5.5 %)      31 (1.4 %)      34 (2.7 %)
+                35 (1.4 %)      36 (1.4 %)      38 (2.8 %)      
+        Other   
+Reading link:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/ahdl/discipline.h
+Reading file:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/ahdl/disciplines.vams
+Reading link:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/ahdl/constants.h
+Reading file:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/ahdl/constants.vams
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2_dir
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2_age_dir
+
+
+Time for Elaboration: CPU = 99.985 ms, elapsed = 104.929 ms.
+Time accumulated: CPU = 672.896 ms, elapsed = 838.105 ms.
+Peak resident memory used = 69.3 Mbytes.
+
+Time for EDB Visiting: CPU = 1 ms, elapsed = 936.985 us.
+Time accumulated: CPU = 674.896 ms, elapsed = 839.347 ms.
+Peak resident memory used = 69.6 Mbytes.
+
+
+Global user options:
+             reltol = 0.001
+            vabstol = 1e-06
+            iabstol = 1e-12
+               temp = 27
+               gmin = 1e-12
+             rforce = 1
+           maxnotes = 5
+           maxwarns = 5
+             digits = 5
+               cols = 80
+             pivrel = 0.001
+           sensfile = ../psf/sens.output
+     checklimitdest = psf
+               save = selected
+               tnom = 27
+             scalem = 1
+              scale = 1
+
+Scoped user options:
+
+Circuit inventory:
+              nodes 3
+          capacitor 2     
+           resistor 3     
+            vsource 1     
+
+Analysis and control statement inventory:
+                 ac 1     
+                 dc 1     
+               info 8     
+               tran 1     
+
+Output statements:
+             .probe 0     
+           .measure 0     
+               save 1     
+
+Time for parsing: CPU = 3 ms, elapsed = 4.72784 ms.
+Time accumulated: CPU = 677.896 ms, elapsed = 844.298 ms.
+Peak resident memory used = 70.6 Mbytes.
+
+~~~~~~~~~~~~~~~~~~~~~~
+Pre-Simulation Summary
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+
+*************************************************
+Transient Analysis `tran': time = (0 s -> 100 ns)
+*************************************************
+DC simulation time: CPU = 1 ms, elapsed = 312.805 us.
+
+Opening the PSF file ../psf/tran.tran.tran ...
+Important parameter values:
+    start = 0 s
+    outputstart = 0 s
+    stop = 100 ns
+    step = 100 ps
+    maxstep = 1 ns
+    ic = all
+    useprevic = no
+    skipdc = no
+    reltol = 100e-06
+    abstol(V) = 1 uV
+    abstol(I) = 1 pA
+    temp = 27 C
+    tnom = 27 C
+    tempeffects = all
+    errpreset = conservative
+    method = gear2only
+    lteratio = 10
+    relref = alllocal
+    cmin = 0 F
+    gmin = 1 pS
+
+
+Output and IC/nodeset summary:
+                 save   1       (current)
+                 save   3       (voltage)
+
+    tran: time = 2.599 ns     (2.6 %), step = 429.9 ps     (430 m%)
+    tran: time = 8.284 ns    (8.28 %), step = 860 ps       (860 m%)
+    tran: time = 13.2 ns     (13.2 %), step = 1 ns            (1 %)
+    tran: time = 18.2 ns     (18.2 %), step = 1 ns            (1 %)
+    tran: time = 23.2 ns     (23.2 %), step = 1 ns            (1 %)
+    tran: time = 28.2 ns     (28.2 %), step = 1 ns            (1 %)
+    tran: time = 33.2 ns     (33.2 %), step = 1 ns            (1 %)
+    tran: time = 38.2 ns     (38.2 %), step = 1 ns            (1 %)
+    tran: time = 43.2 ns     (43.2 %), step = 1 ns            (1 %)
+    tran: time = 48.2 ns     (48.2 %), step = 1 ns            (1 %)
+    tran: time = 52.86 ns    (52.9 %), step = 657.4 ps     (657 m%)
+    tran: time = 57.61 ns    (57.6 %), step = 887.1 ps     (887 m%)
+    tran: time = 62.52 ns    (62.5 %), step = 1 ns            (1 %)
+    tran: time = 67.52 ns    (67.5 %), step = 1 ns            (1 %)
+    tran: time = 72.52 ns    (72.5 %), step = 1 ns            (1 %)
+    tran: time = 77.52 ns    (77.5 %), step = 1 ns            (1 %)
+    tran: time = 82.52 ns    (82.5 %), step = 1 ns            (1 %)
+    tran: time = 87.52 ns    (87.5 %), step = 1 ns            (1 %)
+    tran: time = 92.52 ns    (92.5 %), step = 1 ns            (1 %)
+    tran: time = 97.52 ns    (97.5 %), step = 1 ns            (1 %)
+Number of accepted tran steps =             128
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Post-Transient Simulation Summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   -   Parasitics slow down simulation. To speed up, consider
+          add +postlayout on command line
+   -   To further speed up simulation, consider
+          add ++aps on command line
+   -   Non-default settings that could significantly slow down simulation
+          errpreset = conservative, default moderate
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+During simulation, the CPU load for active processors is :
+        Spectre  0 (48.8 %)      1 (7.0 %)       2 (84.9 %)      3 (4.7 %)
+                 4 (20.0 %)      5 (9.5 %)       6 (36.5 %)      8 (15.3 %)
+                10 (21.2 %)     12 (1.2 %)      15 (1.1 %)      16 (5.9 %)
+                18 (4.7 %)      20 (4.7 %)      21 (11.9 %)     22 (50.6 %)
+                23 (8.3 %)      24 (7.1 %)      25 (12.9 %)     26 (4.7 %)
+                27 (10.5 %)     28 (2.4 %)      29 (4.7 %)      31 (1.2 %)
+                34 (2.3 %)      35 (1.2 %)      36 (1.2 %)      38 (2.4 %)
+        Other   
+Initial condition solution time: CPU = 1 ms, elapsed = 369.787 us.
+Intrinsic tran analysis time:    CPU = 5 ms, elapsed = 7.61318 ms.
+Total time required for tran analysis `tran': CPU = 7.999 ms, elapsed = 14.1001 ms.
+Time accumulated: CPU = 686.894 ms, elapsed = 859.838 ms.
+Peak resident memory used = 72.3 Mbytes.
+
+finalTimeOP: writing operating point information to rawfile.
+
+Opening the PSF file ../psf/finalTimeOP.info ...
+
+******************
+DC Analysis `dcOp'
+******************
+
+Opening the PSF file ../psf/dcOp.dc ...
+Important parameter values:
+    reltol = 1e-03
+    abstol(V) = 1 uV
+    abstol(I) = 1 pA
+    temp = 27 C
+    tnom = 27 C
+    tempeffects = all
+    gmindc = 1 pS
+Convergence achieved in 2 iterations.
+DC simulation time: CPU = 690.894 ms, elapsed = 866.302 ms.
+Total time required for dc analysis `dcOp': CPU = 2 ms, elapsed = 3.32117 ms.
+Time accumulated: CPU = 690.894 ms, elapsed = 866.851 ms.
+Peak resident memory used = 72.4 Mbytes.
+
+dcOpInfo: writing operating point information to rawfile.
+
+Opening the PSF file ../psf/dcOpInfo.info ...
+
+********************************************
+AC Analysis `ac': freq = (10 kHz -> 100 GHz)
+********************************************
+
+Opening the PSF file ../psf/ac.ac ...
+    ac: freq = 19.05 kHz      (4 %), step = 5.251 kHz       (2 %)
+    ac: freq = 26.3 kHz       (6 %), step = 7.248 kHz       (2 %)
+    ac: freq = 36.31 kHz      (8 %), step = 10.01 kHz       (2 %)
+    ac: freq = 50.12 kHz     (10 %), step = 13.81 kHz       (2 %)
+    ac: freq = 69.18 kHz     (12 %), step = 19.06 kHz       (2 %)
+    ac: freq = 95.5 kHz      (14 %), step = 26.32 kHz       (2 %)
+    ac: freq = 131.8 kHz     (16 %), step = 36.33 kHz       (2 %)
+    ac: freq = 182 kHz       (18 %), step = 50.14 kHz       (2 %)
+    ac: freq = 251.2 kHz     (20 %), step = 69.22 kHz       (2 %)
+    ac: freq = 346.7 kHz     (22 %), step = 95.55 kHz       (2 %)
+    ac: freq = 478.6 kHz     (24 %), step = 131.9 kHz       (2 %)
+    ac: freq = 660.7 kHz     (26 %), step = 182.1 kHz       (2 %)
+    ac: freq = 912 kHz       (28 %), step = 251.3 kHz       (2 %)
+    ac: freq = 1.259 MHz     (30 %), step = 346.9 kHz       (2 %)
+    ac: freq = 1.738 MHz     (32 %), step = 478.9 kHz       (2 %)
+    ac: freq = 2.399 MHz     (34 %), step = 661 kHz         (2 %)
+    ac: freq = 3.311 MHz     (36 %), step = 912.5 kHz       (2 %)
+    ac: freq = 4.571 MHz     (38 %), step = 1.26 MHz        (2 %)
+    ac: freq = 6.31 MHz      (40 %), step = 1.739 MHz       (2 %)
+    ac: freq = 8.71 MHz      (42 %), step = 2.4 MHz         (2 %)
+    ac: freq = 12.02 MHz     (44 %), step = 3.313 MHz       (2 %)
+    ac: freq = 16.6 MHz      (46 %), step = 4.573 MHz       (2 %)
+    ac: freq = 22.91 MHz     (48 %), step = 6.313 MHz       (2 %)
+    ac: freq = 31.62 MHz     (50 %), step = 8.714 MHz       (2 %)
+    ac: freq = 43.65 MHz     (52 %), step = 12.03 MHz       (2 %)
+    ac: freq = 60.26 MHz     (54 %), step = 16.6 MHz        (2 %)
+    ac: freq = 83.18 MHz     (56 %), step = 22.92 MHz       (2 %)
+    ac: freq = 114.8 MHz     (58 %), step = 31.64 MHz       (2 %)
+    ac: freq = 158.5 MHz     (60 %), step = 43.67 MHz       (2 %)
+    ac: freq = 218.8 MHz     (62 %), step = 60.29 MHz       (2 %)
+    ac: freq = 302 MHz       (64 %), step = 83.22 MHz       (2 %)
+    ac: freq = 416.9 MHz     (66 %), step = 114.9 MHz       (2 %)
+    ac: freq = 575.4 MHz     (68 %), step = 158.6 MHz       (2 %)
+    ac: freq = 794.3 MHz     (70 %), step = 218.9 MHz       (2 %)
+    ac: freq = 1.096 GHz     (72 %), step = 302.1 MHz       (2 %)
+    ac: freq = 1.514 GHz     (74 %), step = 417.1 MHz       (2 %)
+    ac: freq = 2.089 GHz     (76 %), step = 575.7 MHz       (2 %)
+    ac: freq = 2.884 GHz     (78 %), step = 794.7 MHz       (2 %)
+    ac: freq = 3.981 GHz     (80 %), step = 1.097 GHz       (2 %)
+    ac: freq = 5.495 GHz     (82 %), step = 1.514 GHz       (2 %)
+    ac: freq = 7.586 GHz     (84 %), step = 2.09 GHz        (2 %)
+    ac: freq = 10.47 GHz     (86 %), step = 2.886 GHz       (2 %)
+    ac: freq = 14.45 GHz     (88 %), step = 3.983 GHz       (2 %)
+    ac: freq = 19.95 GHz     (90 %), step = 5.498 GHz       (2 %)
+    ac: freq = 27.54 GHz     (92 %), step = 7.59 GHz        (2 %)
+    ac: freq = 38.02 GHz     (94 %), step = 10.48 GHz       (2 %)
+    ac: freq = 52.48 GHz     (96 %), step = 14.46 GHz       (2 %)
+    ac: freq = 72.44 GHz     (98 %), step = 19.96 GHz       (2 %)
+    ac: freq = 100 GHz      (100 %), step = 27.56 GHz       (2 %)
+Accumulated DC solution time = 0 s.
+Intrinsic ac analysis time =              0 s.
+Total time required for ac analysis `ac': CPU = 3 ms, elapsed = 10.4921 ms.
+Time accumulated: CPU = 694.894 ms, elapsed = 881.059 ms.
+Peak resident memory used = 72.5 Mbytes.
+
+modelParameter: writing model parameter values to rawfile.
+
+Opening the PSF file ../psf/modelParameter.info ...
+element: writing instance parameter values to rawfile.
+
+Opening the PSF file ../psf/element.info ...
+outputParameter: writing output parameter values to rawfile.
+
+Opening the PSF file ../psf/outputParameter.info ...
+designParamVals: writing netlist parameters to rawfile.
+
+Opening the PSFASCII file ../psf/designParamVals.info ...
+primitives: writing primitives to rawfile.
+
+Opening the PSFASCII file ../psf/primitives.info.primitives ...
+subckts: writing subcircuits to rawfile.
+
+Opening the PSFASCII file ../psf/subckts.info.subckts ...
+
+Aggregate audit (11:02:59 PM, Wed Jan 11, 2017):
+Time used: CPU = 740 ms, elapsed = 939 ms, util. = 78.8%.
+Time spent in licensing: elapsed = 26 ms.
+Peak memory used = 75.6 Mbytes.
+Simulation started at: 11:02:58 PM, Wed Jan 11, 2017, ended at: 11:02:59 PM, Wed Jan 11, 2017, with elapsed time (wall clock): 939 ms.
+spectre completes with 0 errors, 0 warnings, and 0 notices.
