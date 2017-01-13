@@ -33,16 +33,19 @@ namespace psf {
     static const uint32_t TYPE_END = 2;
     static const uint32_t SWEEP_END = 3;
     static const uint32_t TRACE_END = 4;
+
+    typedef std::vector<std::string> StrVector;
+
+    typedef boost::variant<int32_t, double, std::string> PropValue;    
+    typedef std::pair<std::string, PropValue> PropEntry;
+    typedef std::unordered_map<std::string, PropValue> PropDict;
+    typedef std::unordered_map<std::string, std::unique_ptr<PropDict>> NestPropDict;    
     
     typedef boost::variant<int8_t, int32_t, double, std::complex<double>, std::string> PSFScalar;
     typedef std::vector<PSFScalar> PSFVector;
-    typedef std::vector<std::string> StrVector;
-
-    typedef std::pair<std::string, PSFScalar> PropEntry;
-    typedef std::unordered_map<std::string, PSFScalar> PropDict;
-    typedef std::unordered_map<std::string, std::unique_ptr<PropDict>> NestPropDict;
     typedef std::unordered_map<std::string, std::unique_ptr<PSFVector>> VecDict;
 
+    
     // a class representing a type definition.
     class TypeDef {
     public:
@@ -104,7 +107,26 @@ namespace psf {
 
     typedef boost::variant<TypePointer, Group> Trace;
     typedef std::vector<Trace> TraceList;
+
+    // a value in a non-sweep simulation result.
+    class NonSweepValue {
+    public:
+        static const uint32_t code = 16;
+
+        NonSweepValue();
+        NonSweepValue(uint32_t id, std::string name, uint32_t type_id,
+                      PSFScalar value, PropDict prop_dict);
         
+        ~NonSweepValue();
+
+    private:
+        uint32_t m_id;
+        std::string m_name;
+        uint32_t m_type_id;
+        PSFScalar m_value;
+        PropDict m_prop_dict;
+    };  
+    
     // a class representing the PSF file.
     class PSFDataSet {
     public:

@@ -627,7 +627,7 @@ namespace psf {
 
         valid = true;
         std::string name;
-        PSFScalar val;
+        PropValue val;
         switch(code) {
         case 33 :
             name = read_str(data);
