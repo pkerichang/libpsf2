@@ -1,6 +1,11 @@
 #ifndef LIBPSF_PSF_H_
 #define LIBPSF_PSF_H_
 
+/**
+ *  Main header file for psf.
+ */
+
+
 #include <vector>
 #include <string>
 #include <complex>
@@ -12,23 +17,13 @@
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/variant.hpp>
-#include <boost/asio.hpp>
 #include <boost/format.hpp>
-
-#define DEBUG 1
-
-#ifdef DEBUG
-#include <iostream>
-#define DEBUG_MSG(str) do { std::cout << str << std::endl; } while( false )
-#else
-#define DEBUG_MSG(str) do { } while ( false )
-#endif
+#include "psf/property.hpp"
 
 namespace psf {
 
     static const uint32_t MAJOR_SECTION_CODE = 21;
     static const uint32_t MINOR_SECTION_CODE = 22;
-    static const uint32_t WORD_SIZE = sizeof(uint32_t);
     static const uint32_t HEADER_END = 1;
     static const uint32_t TYPE_END = 2;
     static const uint32_t SWEEP_END = 3;
@@ -36,11 +31,6 @@ namespace psf {
 
     typedef std::vector<std::string> StrVector;
 
-    typedef boost::variant<int32_t, double, std::string> PropValue;    
-    typedef std::pair<std::string, PropValue> PropEntry;
-    typedef std::unordered_map<std::string, PropValue> PropDict;
-    typedef std::unordered_map<std::string, std::unique_ptr<PropDict>> NestPropDict;    
-    
     typedef boost::variant<int8_t, int32_t, double, std::complex<double>, std::string> PSFScalar;
     typedef std::vector<PSFScalar> PSFVector;
     typedef std::unordered_map<std::string, std::unique_ptr<PSFVector>> VecDict;
@@ -166,43 +156,7 @@ namespace psf {
         bool m_swept;
         bool m_invert_struct;
     };
-    
-
-    inline uint32_t read_uint32(char *& data) {
-        uint32_t ans = ntohl(*(reinterpret_cast<uint32_t*>(data)));
-        data += WORD_SIZE;
-        return ans;
-    }
-    
-    inline uint32_t peek_uint32(const char * data, std::size_t& num_read) {
-        num_read += WORD_SIZE;
-        return ntohl(*(reinterpret_cast<const uint32_t*>(data)));
-    }
-
-    inline int32_t read_int32(char *& data) {
-        return static_cast<int32_t>(read_uint32(data));
-    }
-
-    inline int8_t read_int8(char *& data) {
-        return static_cast<int8_t>(read_uint32(data));
-    }
-    
-    inline double read_double(char *& data) {
-        uint64_t ans = be64toh(*(reinterpret_cast<uint64_t*>(data)));
-        data += sizeof(uint64_t);
-        return *reinterpret_cast<double*>(&ans);
-    }
-    
-    inline std::string read_str(char *& data) {
-        uint32_t len = read_int32(data);
-        std::string ans(data, len);
-        // align to word boundary (4 bytes)
-        data += (len + 3) & ~0x03;
-        return ans;
-    }
-
-    PropEntry read_entry(char *& data, bool& valid);
-    
+        
     TypeDef read_type(char *& data, bool& valid);
     
     TypeList read_type_list(char *& data);
@@ -223,6 +177,8 @@ namespace psf {
     // really the same as read_type_section
     std::unique_ptr<TraceList> read_trace_section(char *& data, const char * orig, bool is_trace);
 
+    void read_sweep_values_test(char *& data, const char * orig);
+    
 }
 
     

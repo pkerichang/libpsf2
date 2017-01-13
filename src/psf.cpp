@@ -117,7 +117,58 @@ namespace psf {
 
         DEBUG_MSG("Reading traces");
         m_trace_list = read_trace_section(data_pointer, mmap_data, true);
+
+        DEBUG_MSG("Reading valuess");
+        read_sweep_values_test(data_pointer, mmap_data);
+        
     }
+
+    void read_sweep_values_test(char *& data, const char * orig) {
+        std::size_t num_read = 0;
+        uint32_t code = peek_uint32(data, num_read);
+        if (code != MAJOR_SECTION_CODE) {
+            std::string msg = (boost::format("Invalid sweepval section code %d, expected %d") % code %
+                               MAJOR_SECTION_CODE).str();
+            throw new std::runtime_error(msg);
+        }
+        data += num_read;
+        
+        uint32_t end_pos = read_uint32(data);
+        DEBUG_MSG("sweepval end position = " << end_pos);
+
+        int windowsize = 4096;
+
+        uint32_t zp_code = read_uint32(data);
+        DEBUG_MSG("zero padding code = " << zp_code);
+
+        uint32_t zp_size = read_uint32(data);
+        DEBUG_MSG("zero padding size = " << zp_size << ", skipping");
+
+        data += zp_size;
+        uint32_t vali, np;
+        std::string vals;
+        double vald;
+
+        vali = read_uint32(data);
+        DEBUG_MSG(boost::format("%d %x") % vali % vali);
+        vali = read_uint32(data);
+        DEBUG_MSG(boost::format("%d %x") % vali % vali);
+        np = (vali >> 16) & 0xffff;
+        DEBUG_MSG(boost::format("%d") % np);
+        for (int i = 0; i < np; i++) {
+            vald = read_double(data);
+            DEBUG_MSG(boost::format("%.6g") % vald);
+        }
+        data += windowsize - 8 * np;
+        
+        for (int i = 0; i < np; i++) {
+            vald = read_double(data);
+            DEBUG_MSG(boost::format("%.6g") % vald);
+        }
+        
+        
+    }
+
     
     /**
      * This functions reads the header section and returns the
@@ -140,19 +191,12 @@ namespace psf {
             throw new std::runtime_error(msg);
         }
         data += num_read;
-        auto ans = std::unique_ptr<PropDict>(new PropDict());
-        
+                
         uint32_t end_pos = read_uint32(data);
         DEBUG_MSG("Header end position = " << end_pos);
 
-        bool valid_entry = true;
-        while (valid_entry) {
-            PropEntry entry = read_entry(data, valid_entry);
-            if (valid_entry) {
-                ans->insert(entry);
-            }
-        }
-
+        auto ans = PropDict::read(data);
+        
         uint32_t end_marker = read_uint32(data);
         DEBUG_MSG("Read end marker " << end_marker << " (should be " << HEADER_END << ")");
         if ((data - orig) != end_pos) {
@@ -254,7 +298,54 @@ namespace psf {
         
         return ans;
     }
+    
+    /**
+     * This functions reads the sweep section and returns the
+     * sweep list.
+     *
+     * sweep section format:
+     * int code = major_section
+     * int end_pos (end position of section).
+     * TypePointer type1
+     * TypePointer type2
+     * ...
+     * int end_marker = SWEEP_END
+     */
+    std::unique_ptr<TypePtrList> read_sweep(char *& data, const char * orig) {
+        std::size_t num_read = 0;
+        uint32_t code = peek_uint32(data, num_read);
+        if (code != MAJOR_SECTION_CODE) {
+            std::string msg = (boost::format("Invalid sweep section code %d, expected %d") % code %
+                               MAJOR_SECTION_CODE).str();
+            throw new std::runtime_error(msg);
+        }
+        data += num_read;
 
+        auto ans = std::unique_ptr<TypePtrList>(new TypePtrList());
+        
+        uint32_t end_pos = read_uint32(data);
+        DEBUG_MSG("Sweep end position = " << end_pos);
+
+        DEBUG_MSG("Reading sweep types");
+        bool valid_type = true;
+        while (valid_type) {
+            TypePointer temp = read_type_pointer(data, valid_type);
+            if (valid_type) {
+                ans->push_back(temp);
+            }
+        }
+
+        uint32_t end_marker = read_uint32(data);
+        DEBUG_MSG("Read end marker " << end_marker << " (should be " << SWEEP_END << ")");
+        if ((data - orig) != end_pos) {
+            std::string msg = (boost::format("sweep end position is not %d, something's wrong") %
+                               end_pos).str();
+            throw new std::runtime_error(msg);
+        }
+        
+        return ans;
+    }
+    
     /**
      * This functions reads the trace section and returns the
      * list of group or type pointers.
@@ -271,8 +362,12 @@ namespace psf {
      * int index_size
      * int index_id1
      * int index_offset1
+     * int extra1
+     * int extra1
      * int index_id2
      * int index_offset2
+     * int extra2
+     * int extra2
      * ...
      * int end_marker = TRACE_END
      */
@@ -347,51 +442,68 @@ namespace psf {
     }
     
     /**
-     * This functions reads the sweep section and returns the
-     * sweep list.
+     * This functions reads the value section when no sweep is defined, and returns the
+     * list of values
      *
-     * sweep section format:
+     * value (no sweep) section format:
      * int code = major_section
      * int end_pos (end position of section).
-     * TypePointer type1
-     * TypePointer type2
+     * int code = minor_section
+     * int end_pos (end position of sub-section).
+     * NonsweepValue val1
+     * NonsweepValue val2
      * ...
-     * int end_marker = SWEEP_END
+     * int index_type
+     * int index_size
+     * int index_id1
+     * int index_offset1
+     * int index_id2
+     * int index_offset2
+     * ...
+     * int end_marker = VALUE_END
      */
-    std::unique_ptr<TypePtrList> read_sweep(char *& data, const char * orig) {
-        std::size_t num_read = 0;
-        uint32_t code = peek_uint32(data, num_read);
-        if (code != MAJOR_SECTION_CODE) {
-            std::string msg = (boost::format("Invalid sweep section code %d, expected %d") % code %
-                               MAJOR_SECTION_CODE).str();
-            throw new std::runtime_error(msg);
-        }
-        data += num_read;
+    
+    /**
+     * NonesweepValue format:
+     * int code = nonsweep_value_code
+     * int id
+     * string name
+     * int type_id
+     * (char | int | double | string | complex | composite) value, depends on type_id
+     * PropEntry entry1
+     * PropEntry entry2
+     * ...
+     * 
+     */
 
-        auto ans = std::unique_ptr<TypePtrList>(new TypePtrList());
-        
-        uint32_t end_pos = read_uint32(data);
-        DEBUG_MSG("Sweep end position = " << end_pos);
+    /**
+     * This functions reads the value section when sweep is defined, and returns the
+     * list of values
+     *
+     * value (sweep, windowed mode) section format 1:
+     * int code = major_section
+     * int end_pos (end position of section).
+     * ZeroPadding pad
+     * int end_pos (end position of sub-section).
+     * NonsweepValue val1
+     * NonsweepValue val2
+     * ...
+     * int index_type
+     * int index_size
+     * int index_id1
+     * int index_offset1
+     * int index_id2
+     * int index_offset2
+     * ...
+     * int end_marker = VALUE_END
+     */
 
-        DEBUG_MSG("Reading sweep types");
-        bool valid_type = true;
-        while (valid_type) {
-            TypePointer temp = read_type_pointer(data, valid_type);
-            if (valid_type) {
-                ans->push_back(temp);
-            }
-        }
-
-        uint32_t end_marker = read_uint32(data);
-        DEBUG_MSG("Read end marker " << end_marker << " (should be " << SWEEP_END << ")");
-        if ((data - orig) != end_pos) {
-            std::string msg = (boost::format("sweep end position is not %d, something's wrong") %
-                               end_pos).str();
-            throw new std::runtime_error(msg);
-        }
-        
-        return ans;
-    }
+    /**
+     * ZeroPadding format:
+     * int code = zeropad_code (20)
+     * int size
+     * 0000000... (${size} number of 0 bytes).
+     */
 
     
     /**
@@ -481,17 +593,11 @@ namespace psf {
         }
         
         // serialize properties
-        PropDict prop_dict;
-        bool valid_entry = true;
         DEBUG_MSG("Reading TypeDef Properties");
-        do {
-            PropEntry entry = read_entry(data, valid_entry);
-            if (valid_entry) {
-                prop_dict.insert(entry);
-            }
-        } while (valid_entry);
-
-        return TypeDef(id, name, array_type, data_type, typedef_tuple, prop_dict);
+        bool valid_entry = true;
+        auto prop_dict = PropDict::read(data);
+        
+        return TypeDef(id, name, array_type, data_type, typedef_tuple, *prop_dict.release());
     }
 
     /**
@@ -526,17 +632,11 @@ namespace psf {
         DEBUG_MSG("TypePointer = (" << id << ", " << name << ", " << type_id << ")");
         
         // serialize properties
-        PropDict prop_dict;
-        bool valid_entry = true;
         DEBUG_MSG("Reading TypePointer Properties");
-        do {
-            PropEntry entry = read_entry(data, valid_entry);
-            if (valid_entry) {
-                prop_dict.insert(entry);
-            }
-        } while (valid_entry);
-
-        return TypePointer(id, name, type_id, prop_dict);
+        bool valid_entry = true;
+        auto prop_dict = PropDict::read(data);
+        
+        return TypePointer(id, name, type_id, *prop_dict.release());
     }
 
     /**
@@ -611,45 +711,5 @@ namespace psf {
             return val;
         }
     }
-    
-    /**
-     * This function reads a PropEntry object from file.
-     *
-     * PropEntry format 1:
-     * int code = (string_val | int_val | double_val)
-     * string name
-     * (string | int | double) value
-     */
-    PropEntry read_entry(char *& data, bool& valid) {
-        std::size_t num_read = 0;
-        uint32_t code = peek_uint32(data, num_read);
-        data += num_read;
-
-        valid = true;
-        std::string name;
-        PropValue val;
-        switch(code) {
-        case 33 :
-            name = read_str(data);
-            val = read_str(data);
-            DEBUG_MSG("Read entry (" << name << ", " << val << ")");
-            return PropEntry(name, val);
-        case 34 :
-            name = read_str(data);
-            val = read_int32(data);
-            DEBUG_MSG("Read entry (" << name << ", " << val << ")");
-            return PropEntry(name, val);
-        case 35 :
-            name = read_str(data);
-            val = read_double(data);
-            DEBUG_MSG("Read entry (" << name << ", " << val << ")");
-            return PropEntry(name, val);
-        default :
-            valid = false;
-            data -= num_read;
-            DEBUG_MSG("Cannot parse entry");
-            return PropEntry();
-        }
-    }
-    
+        
 }
