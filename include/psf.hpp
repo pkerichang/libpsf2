@@ -31,7 +31,7 @@
 
 namespace psf {
 
-    typedef boost::variant<char, int, double, std::complex<double>, std::string> PSFScalar;
+    typedef boost::variant<int8_t, int32_t, double, std::complex<double>, std::string> PSFScalar;
     typedef std::vector<PSFScalar> PSFVector;
     typedef std::vector<std::string> StrVector;
     
@@ -83,20 +83,25 @@ namespace psf {
         return std::string(start + WORD_SIZE, len);
     }
     
-    inline uint32_t deserialize_int(const char* start, std::size_t& num_read) {
+    inline int32_t deserialize_int32(const char* start, std::size_t& num_read) {
         num_read += WORD_SIZE;
-        return GET_I32(start);
+        return static_cast<int32_t>(GET_I32(start));
     }
     
-    inline uint64_t deserialize_double(const char* start, std::size_t& num_read) {
+    inline double deserialize_double(const char* start, std::size_t& num_read) {
         num_read += sizeof(uint64_t);
-        return GET_I64(start);
+        uint64_t tmp = GET_I64(start);
+        return *reinterpret_cast<double*>(&tmp);
     }
 
     // Decodes a single name-value entry.
-    std::size_t deserialize_entry(const char* start, uint32_t end_marker, PropDict* pdict);
+    std::size_t deserialize_entry(const char* start, uint32_t end_marker, bool& end_reached);
     std::size_t deserialize_prop_section(const char* start, std::size_t start_idx, uint32_t ps_type,
                                          uint32_t end_marker, PropDict* pdict);
+    std::size_t deserialize_indexed_section(const char* start, std::size_t start_idx, uint32_t ps_type,
+                                            uint32_t end_marker, bool is_trace, PropDict* pdict);
+    int deserialize_struct(const char* start, uint32_t end_marker, std::size_t& num_read);
+    std::size_t deserialize_type(const char* start, uint32_t end_marker);
 }
 
     
