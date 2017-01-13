@@ -13,6 +13,7 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/variant.hpp>
 #include <boost/asio.hpp>
+#include <boost/format.hpp>
 
 #define DEBUG 1
 
@@ -28,7 +29,9 @@ namespace psf {
     static const uint32_t MAJOR_SECTION_CODE = 21;
     static const uint32_t MINOR_SECTION_CODE = 22;
     static const uint32_t WORD_SIZE = sizeof(uint32_t);
-    
+    static const uint32_t HEADER_END = 1;
+    static const uint32_t TYPE_END = 2;
+    static const uint32_t SWEEP_END = 3;
     
     typedef boost::variant<int8_t, int32_t, double, std::complex<double>, std::string> PSFScalar;
     typedef std::vector<PSFScalar> PSFVector;
@@ -45,6 +48,7 @@ namespace psf {
         static const uint32_t code = 16;
         static const uint32_t struct_code = 16;
         static const uint32_t tuple_code = 18;
+
         TypeDef();
         TypeDef(uint32_t id, std::string name, uint32_t array_type, uint32_t data_type,
                 std::vector<TypeDef> typedef_tuple, PropDict prop_dict);
@@ -61,6 +65,25 @@ namespace psf {
     };
 
     typedef std::vector<TypeDef> TypeList;
+
+    // a class referencing a defined type
+    class TypePointer {
+    public:
+        static const uint32_t code = 16;
+        
+        TypePointer();
+        TypePointer(uint32_t id, std::string name, uint32_t type_id, PropDict prop_dict);
+        
+        ~TypePointer();
+
+    private:
+        uint32_t m_id;
+        std::string m_name;
+        uint32_t m_type_id;
+        PropDict m_prop_dict;
+    };
+
+    typedef std::vector<TypePointer> TypePtrList;
     
     // a class representing the PSF file.
     class PSFDataSet {
@@ -93,6 +116,7 @@ namespace psf {
         std::unique_ptr<StrVector> m_swp_vars;
         std::unique_ptr<PSFVector> m_swp_vals;
         std::unique_ptr<TypeList> m_type_list;
+        std::unique_ptr<TypePtrList> m_sweep_list;
         
         int m_num_sweeps;
         int m_num_points;
@@ -134,16 +158,20 @@ namespace psf {
         return ans;
     }
 
-    PropEntry read_entry(char *& data, uint32_t end_marker, bool& valid);
+    PropEntry read_entry(char *& data, bool& valid);
     
-    TypeDef read_type(char *& data, uint32_t end_marker, bool& valid);
-
-    TypeList read_type_list(char *& data, uint32_t end_marker);
+    TypeDef read_type(char *& data, bool& valid);
     
-    std::unique_ptr<PropDict> read_header(char *& data, const char * orig, uint32_t end_marker);
+    TypeList read_type_list(char *& data);
 
-    std::unique_ptr<TypeList> read_type_section(char *& data, const char * orig, uint32_t end_marker,
-                                                bool is_trace);
+    TypePointer read_type_pointer(char *& data, bool& valid);
+    
+    std::unique_ptr<PropDict> read_header(char *& data, const char * orig);
+
+    std::unique_ptr<TypeList> read_type_section(char *& data, const char * orig, bool is_trace);
+
+    std::unique_ptr<TypePtrList> read_sweep(char *& data, const char * orig);
+
 
 }
 
