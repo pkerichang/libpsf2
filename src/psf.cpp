@@ -83,32 +83,224 @@ namespace psf {
         m_prop_dict = read_header(data_pointer, mmap_data);
     
         DEBUG_MSG("Reading types");
-        m_type_map = read_type_section(data_pointer, mmap_data, false);
+        m_type_map = read_type(data_pointer, mmap_data);
     
         DEBUG_MSG("Reading sweeps");
         // DEBUG_MSG("Current Position = " << (data_pointer - mmap_data));
         m_sweep_list = read_sweep(data_pointer, mmap_data);
     
         DEBUG_MSG("Reading traces");
-        m_trace_list = read_trace_section(data_pointer, mmap_data, true);
+        m_trace_list = read_trace(data_pointer, mmap_data);
     
         DEBUG_MSG("Reading valuess");
         read_sweep_values_test(data_pointer, mmap_data);
     
     }
-
-    void read_sweep_values_test(char *& data, const char * orig) {
-        std::size_t num_read = 0;
-        uint32_t code = peek_uint32(data, num_read);
-        if (code != MAJOR_SECTION_CODE) {
-            std::string msg = (boost::format("Invalid sweepval section code %d, expected %d") % code %
-                               MAJOR_SECTION_CODE).str();
+    
+    /**
+     * Read the section preamble.  Returns end position index.
+     *
+     * section preamble format:
+     * int code = MAJOR_SECTION_CODE
+     * int end_pos (end position of section).
+     */
+    inline uint32_t read_section_preamble(char *& data, uint32_t section_code) {
+        uint32_t code = read_uint32(data);
+        if (code != section_code) {
+            std::string msg = (boost::format("Invalid section code %d, expected %d") % code %
+                               section_code).str();
             throw new std::runtime_error(msg);
         }
-        data += num_read;
     
         uint32_t end_pos = read_uint32(data);
-        DEBUG_MSG("sweepval end position = " << end_pos);
+        DEBUG_MSG("section end position = " << end_pos);
+
+        return end_pos;
+    }
+
+    /**
+     * Read the second end.  
+     *
+     * section end format:
+     * int marker = end_marker.
+     */
+    inline void read_section_end(char *& data, const char * orig, uint32_t end_pos, uint32_t end_marker) {
+        uint32_t marker = read_uint32(data);
+        DEBUG_MSG("Read end marker " << marker << " (should be " << end_marker << ")");
+        if ((data - orig) != end_pos) {
+            std::string msg = (boost::format("Section end position is not %d, something's wrong") %
+                               end_pos).str();
+            throw new std::runtime_error(msg);
+        }
+    }
+
+    /**
+     * Read the index section.
+     *
+     */
+    inline void read_index(char *& data, bool is_trace) {
+        uint32_t index_type = read_uint32(data);
+        DEBUG_MSG("Type index type = " << index_type);
+        uint32_t index_size = read_uint32(data);
+        DEBUG_MSG("Type index size = " << index_size);
+        if (is_trace) {
+            // read trace information
+            uint32_t id, offset, extra1, extra2;
+            for(int i = 0; i < index_size; i += 4 * WORD_SIZE) {
+                id = read_uint32(data);
+                offset = read_uint32(data);
+                extra1= read_uint32(data);
+                extra2 = read_uint32(data);
+                DEBUG_MSG("trace index: (" << id << ", " << offset <<
+                          ", " << extra1 << ", " << extra2 << ")");
+            }
+        } else {
+            // read index information
+            uint32_t id, offset;
+            for(int i = 0; i < index_size; i += 2 * WORD_SIZE) {
+                id = read_uint32(data);
+                offset = read_uint32(data);
+                DEBUG_MSG("index: (" << id << ", " << offset << ")");
+            }
+        }
+
+    }
+    
+    
+    /**
+     * This functions reads the header section and returns the
+     * property dictionary.
+     *
+     * header section body format:
+     * PropEntry entry1
+     * PropEntry entry2
+     * ...
+     */
+    std::unique_ptr<PropDict> read_header(char *& data, const char * orig) {
+
+        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+
+        auto ans = std::unique_ptr<PropDict>(new PropDict());
+        ans->read(data);    
+        
+        read_section_end(data, orig, end_pos, HEADER_END);
+        
+        return ans;
+    }
+
+    /**
+     * This functions reads the type section and returns the
+     * list of type definitions.
+     *
+     * type section body format:
+     * subsection{
+     * TypeDef type1
+     * TypeDef type2
+     * ...
+     * }
+     * int index_type
+     * int index_size
+     * int index_id1
+     * int index_offset1
+     * int index_id2
+     * int index_offset2
+     * ...
+     * int end_marker = TYPE_END
+     */
+    std::unique_ptr<TypeMap> read_type(char *& data, const char * orig) {
+
+        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+        uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
+        
+        auto ans = std::unique_ptr<TypeMap>(new TypeMap());
+        bool valid_type = true;
+        while (valid_type && (data - orig) < sub_end_pos) {
+            TypeDef temp;
+            valid_type = temp.read(data, ans.get());
+        }
+
+        read_index(data, false);
+        read_section_end(data, orig, end_pos, TYPE_END);
+    
+        return ans;
+    }
+
+    /**
+     * This functions reads the sweep section and returns the
+     * sweep list.
+     *
+     * sweep body format:
+     * Variable type1
+     * Variable type2
+     * ...
+     */
+    std::unique_ptr<VarList> read_sweep(char *& data, const char * orig) {
+
+        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+
+        DEBUG_MSG("Reading sweep types");
+        auto ans = std::unique_ptr<VarList>(new VarList());
+        bool valid_type = true;
+        while (valid_type) {
+            Variable temp;
+            valid_type = temp.read(data);
+            if (valid_type) {
+                ans->push_back(temp);
+            }
+        }
+
+        read_section_end(data, orig, end_pos, SWEEP_END);
+             
+        return ans;
+    }
+
+    /**
+     * This functions reads the trace section and returns the
+     * list of group or type pointers.
+     *
+     * trace section body format:
+     * subsection{
+     * (Variable or Group) type1
+     * (Variable or Group) type2
+     * ...
+     * }
+     * int index_type
+     * int index_size
+     * int index_id1
+     * int index_offset1
+     * int extra1
+     * int extra1
+     * int index_id2
+     * int index_offset2
+     * int extra2
+     * int extra2
+     * ...
+     * int end_marker = TRACE_END
+     */
+    std::unique_ptr<TraceList> read_trace(char *& data, const char * orig) {
+
+        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+        uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
+
+        auto ans = std::unique_ptr<TraceList>(new TraceList());
+        bool valid_type = true;
+        while (valid_type && (data - orig) < sub_end_pos) {
+            Trace temp;
+            valid_type = temp.read(data);
+            if (valid_type) {
+                ans->push_back(temp);
+            }
+        }
+    
+        read_index(data, true);
+        read_section_end(data, orig, end_pos, TRACE_END);
+    
+        return ans;
+    }
+
+    void read_sweep_values_test(char *& data, const char * orig) {
+
+        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
     
         int windowsize = 4096;
     
@@ -139,282 +331,6 @@ namespace psf {
             vald = read_double(data);
             DEBUG_MSG(boost::format("%.6g") % vald);
         }
-    
-    
-    }
-
-
-    /**
-     * This functions reads the header section and returns the
-     * property dictionary.
-     *
-     * header section format:
-     * int code = major_section
-     * int end_pos (end position of section).
-     * PropEntry entry1
-     * PropEntry entry2
-     * ...
-     * int end_marker = HEADER_END
-     */
-    std::unique_ptr<PropDict> read_header(char *& data, const char * orig) {
-        std::size_t num_read = 0;
-        uint32_t code = peek_uint32(data, num_read);
-        if (code != MAJOR_SECTION_CODE) {
-            std::string msg = (boost::format("Invalid header section code %d, expected %d") % code %
-                               MAJOR_SECTION_CODE).str();
-            throw new std::runtime_error(msg);
-        }
-        data += num_read;
-    
-        uint32_t end_pos = read_uint32(data);
-        DEBUG_MSG("Header end position = " << end_pos);
-    
-        auto ans = std::unique_ptr<PropDict>(new PropDict());
-        ans->read(data);
-    
-        uint32_t end_marker = read_uint32(data);
-        DEBUG_MSG("Read end marker " << end_marker << " (should be " << HEADER_END << ")");
-        if ((data - orig) != end_pos) {
-            std::string msg = (boost::format("Header end position is not %d, something's wrong") %
-                               end_pos).str();
-            throw new std::runtime_error(msg);
-        }
-    
-        return ans;
-    }
-
-    /**
-     * This functions reads the type section and returns the
-     * list of type definitions
-     *
-     * type section format:
-     * int code = major_section
-     * int end_pos (end position of section).
-     * int code = minor_section
-     * int end_pos (end position of sub-section).
-     * TypeDef type1
-     * TypeDef type2
-     * ...
-     * int index_type
-     * int index_size
-     * int index_id1
-     * int index_offset1
-     * int index_id2
-     * int index_offset2
-     * ...
-     * int end_marker = TYPE_END
-     */
-    std::unique_ptr<TypeMap> read_type_section(char *& data, const char * orig,
-                                               bool is_trace) {
-        std::size_t num_read = 0;
-        uint32_t code = peek_uint32(data, num_read);
-        if (code != MAJOR_SECTION_CODE) {
-            std::string msg = (boost::format("Invalid type section code %d, expected %d") % code %
-                               MAJOR_SECTION_CODE).str();
-            throw new std::runtime_error(msg);
-        }
-        data += num_read;
-
-        uint32_t end_pos = read_uint32(data);
-        DEBUG_MSG("Type end position = " << end_pos);
-    
-        num_read = 0;
-        code = peek_uint32(data, num_read);
-        if (code != MINOR_SECTION_CODE) {
-            std::string msg = (boost::format("Invalid type subsection code %d, expected %d") % code %
-                               MINOR_SECTION_CODE).str();
-            throw new std::runtime_error(msg);
-        }
-        data += num_read;
-    
-        uint32_t sub_end_pos = read_uint32(data);
-        DEBUG_MSG("Type subsection end position = " << sub_end_pos);
-    
-        auto ans = std::unique_ptr<TypeMap>(new TypeMap());
-        bool valid_type = true;
-        while (valid_type && (data - orig) < sub_end_pos) {
-            TypeDef temp;
-            valid_type = temp.read(data, ans.get());
-        }
-    
-        uint32_t index_type = read_uint32(data);
-        DEBUG_MSG("Type index type = " << index_type);
-        uint32_t index_size = read_uint32(data);
-        DEBUG_MSG("Type index size = " << index_size);
-        if (is_trace) {
-            // read trace information
-            uint32_t id, offset, extra1, extra2;
-            for(int i = 0; i < index_size; i += 4 * WORD_SIZE) {
-                id = read_uint32(data);
-                offset = read_uint32(data);
-                extra1= read_uint32(data);
-                extra2 = read_uint32(data);
-                DEBUG_MSG("trace index: (" << id << ", " << offset <<
-                          ", " << extra1 << ", " << extra2 << ")");
-            }
-        } else {
-            // read index information
-            uint32_t id, offset;
-            for(int i = 0; i < index_size; i += 2 * WORD_SIZE) {
-                id = read_uint32(data);
-                offset = read_uint32(data);
-                DEBUG_MSG("index: (" << id << ", " << offset << ")");
-            }
-        }
-    
-        uint32_t end_marker = read_uint32(data);
-        DEBUG_MSG("Read end marker " << end_marker << " (should be " << TYPE_END << ")");
-        if ((data - orig) != end_pos) {
-            std::string msg = (boost::format("type end position is not %d, something's wrong") %
-                               end_pos).str();
-            throw new std::runtime_error(msg);
-        }
-    
-        return ans;
-    }
-
-    /**
-     * This functions reads the sweep section and returns the
-     * sweep list.
-     *
-     * sweep section format:
-     * int code = major_section
-     * int end_pos (end position of section).
-     * Variable type1
-     * Variable type2
-     * ...
-     * int end_marker = SWEEP_END
-     */
-    std::unique_ptr<VarList> read_sweep(char *& data, const char * orig) {
-        std::size_t num_read = 0;
-        uint32_t code = peek_uint32(data, num_read);
-        if (code != MAJOR_SECTION_CODE) {
-            std::string msg = (boost::format("Invalid sweep section code %d, expected %d") % code %
-                               MAJOR_SECTION_CODE).str();
-            throw new std::runtime_error(msg);
-        }
-        data += num_read;
-    
-        auto ans = std::unique_ptr<VarList>(new VarList());
-    
-        uint32_t end_pos = read_uint32(data);
-        DEBUG_MSG("Sweep end position = " << end_pos);
-    
-        DEBUG_MSG("Reading sweep types");
-        bool valid_type = true;
-        while (valid_type) {
-            Variable temp;
-            valid_type = temp.read(data);
-            if (valid_type) {
-                ans->push_back(temp);
-            }
-        }
-    
-        uint32_t end_marker = read_uint32(data);
-        DEBUG_MSG("Read end marker " << end_marker << " (should be " << SWEEP_END << ")");
-        if ((data - orig) != end_pos) {
-            std::string msg = (boost::format("sweep end position is not %d, something's wrong") %
-                               end_pos).str();
-            throw new std::runtime_error(msg);
-        }
-    
-        return ans;
-    }
-
-    /**
-     * This functions reads the trace section and returns the
-     * list of group or type pointers.
-     *
-     * type section format:
-     * int code = major_section
-     * int end_pos (end position of section).
-     * int code = minor_section
-     * int end_pos (end position of sub-section).
-     * (Variable or Group) type1
-     * (Variable or Group) type2
-     * ...
-     * int index_type
-     * int index_size
-     * int index_id1
-     * int index_offset1
-     * int extra1
-     * int extra1
-     * int index_id2
-     * int index_offset2
-     * int extra2
-     * int extra2
-     * ...
-     * int end_marker = TRACE_END
-     */
-    std::unique_ptr<TraceList> read_trace_section(char *& data, const char * orig, bool is_trace) {
-        std::size_t num_read = 0;
-        uint32_t code = peek_uint32(data, num_read);
-        if (code != MAJOR_SECTION_CODE) {
-            std::string msg = (boost::format("Invalid trace section code %d, expected %d") % code %
-                               MAJOR_SECTION_CODE).str();
-            throw new std::runtime_error(msg);
-        }
-        data += num_read;
-    
-        uint32_t end_pos = read_uint32(data);
-        DEBUG_MSG("Trace end position = " << end_pos);
-    
-        num_read = 0;
-        code = peek_uint32(data, num_read);
-        if (code != MINOR_SECTION_CODE) {
-            std::string msg = (boost::format("Invalid trace subsection code %d, expected %d") % code %
-                               MINOR_SECTION_CODE).str();
-            throw new std::runtime_error(msg);
-        }
-        data += num_read;
-    
-        uint32_t sub_end_pos = read_uint32(data);
-        DEBUG_MSG("Trace subsection end position = " << sub_end_pos);
-    
-        auto ans = std::unique_ptr<TraceList>(new TraceList());
-        bool valid_type = true;
-        while (valid_type && (data - orig) < sub_end_pos) {
-            Trace temp;
-            valid_type = temp.read(data);
-            if (valid_type) {
-                ans->push_back(temp);
-            }
-        }
-    
-        uint32_t index_type = read_uint32(data);
-        DEBUG_MSG("Trace index type = " << index_type);
-        uint32_t index_size = read_uint32(data);
-        DEBUG_MSG("Trace index size = " << index_size);
-        if (is_trace) {
-            // read trace information
-            uint32_t id, offset, extra1, extra2;
-            for(int i = 0; i < index_size; i += 4 * WORD_SIZE) {
-                id = read_uint32(data);
-                offset = read_uint32(data);
-                extra1= read_uint32(data);
-                extra2 = read_uint32(data);
-                DEBUG_MSG("trace index: (" << id << ", " << offset <<
-                          ", " << extra1 << ", " << extra2 << ")");
-            }
-        } else {
-            // read index information
-            uint32_t id, offset;
-            for(int i = 0; i < index_size; i += 2 * WORD_SIZE) {
-                id = read_uint32(data);
-                offset = read_uint32(data);
-                DEBUG_MSG("index: (" << id << ", " << offset << ")");
-            }
-        }
-    
-        uint32_t end_marker = read_uint32(data);
-        DEBUG_MSG("Read end marker " << end_marker << " (should be " << TRACE_END << ")");
-        if ((data - orig) != end_pos) {
-            std::string msg = (boost::format("trace end position is not %d, something's wrong") %
-                               end_pos).str();
-            throw new std::runtime_error(msg);
-        }
-    
-        return ans;
     }
 
     /**

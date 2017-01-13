@@ -94,16 +94,18 @@ namespace psf {
         bool m_swept;
         bool m_invert_struct;
     };
+
+    uint32_t read_section_preamble(char *&data);
     
     std::unique_ptr<PropDict> read_header(char *& data, const char * orig);
 
-    std::unique_ptr<TypeMap> read_type_section(char *& data, const char * orig, bool is_trace);
+    std::unique_ptr<TypeMap> read_type(char *& data, const char * orig);
 
     // really the same as read_header
     std::unique_ptr<VarList> read_sweep(char *& data, const char * orig);
 
     // really the same as read_type_section
-    std::unique_ptr<TraceList> read_trace_section(char *& data, const char * orig, bool is_trace);
+    std::unique_ptr<TraceList> read_trace(char *& data, const char * orig);
 
     void read_sweep_values_test(char *& data, const char * orig);
     
