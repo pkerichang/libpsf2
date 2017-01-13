@@ -18,7 +18,8 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/variant.hpp>
 #include <boost/format.hpp>
-#include "psf/property.hpp"
+#include "psfproperty.hpp"
+#include "psftypes.hpp"
 
 namespace psf {
 
@@ -34,70 +35,7 @@ namespace psf {
     typedef boost::variant<int8_t, int32_t, double, std::complex<double>, std::string> PSFScalar;
     typedef std::vector<PSFScalar> PSFVector;
     typedef std::unordered_map<std::string, std::unique_ptr<PSFVector>> VecDict;
-
     
-    // a class representing a type definition.
-    class TypeDef {
-    public:
-        static const uint32_t code = 16;
-        static const uint32_t struct_code = 16;
-        static const uint32_t tuple_code = 18;
-
-        TypeDef();
-        TypeDef(uint32_t id, std::string name, uint32_t array_type, uint32_t data_type,
-                std::vector<TypeDef> typedef_tuple, PropDict prop_dict);
-        
-        ~TypeDef();
-
-    private:
-        uint32_t m_id;
-        std::string m_name;
-        uint32_t m_array_type;
-        uint32_t m_data_type;
-        std::vector<TypeDef> m_typedef_tuple;        
-        PropDict m_prop_dict;
-    };
-
-    typedef std::vector<TypeDef> TypeList;
-
-    // a class referencing a defined type
-    class TypePointer {
-    public:
-        static const uint32_t code = 16;
-        
-        TypePointer();
-        TypePointer(uint32_t id, std::string name, uint32_t type_id, PropDict prop_dict);
-        
-        ~TypePointer();
-
-    private:
-        uint32_t m_id;
-        std::string m_name;
-        uint32_t m_type_id;
-        PropDict m_prop_dict;
-    };
-
-    typedef std::vector<TypePointer> TypePtrList;
-    
-    // a collection of TypePointers.
-    class Group {
-    public:
-        static const uint32_t code = 17;
-
-        Group();
-        Group(uint32_t id, std::string name, TypePtrList vec);
-        
-        ~Group();
-
-    private:
-        uint32_t m_id;
-        std::string m_name;
-        TypePtrList m_vec;
-    };
-
-    typedef boost::variant<TypePointer, Group> Trace;
-    typedef std::vector<Trace> TraceList;
-
     // a value in a non-sweep simulation result.
     class NonSweepValue {
     public:
@@ -147,8 +85,8 @@ namespace psf {
         std::unique_ptr<VecDict> m_vector_dict;
         std::unique_ptr<StrVector> m_swp_vars;
         std::unique_ptr<PSFVector> m_swp_vals;
-        std::unique_ptr<TypeList> m_type_list;
-        std::unique_ptr<TypePtrList> m_sweep_list;
+        std::unique_ptr<TypeMap> m_type_map;
+        std::unique_ptr<VarList> m_sweep_list;
         std::unique_ptr<TraceList> m_trace_list;
         
         int m_num_sweeps;
@@ -156,23 +94,13 @@ namespace psf {
         bool m_swept;
         bool m_invert_struct;
     };
-        
-    TypeDef read_type(char *& data, bool& valid);
-    
-    TypeList read_type_list(char *& data);
-
-    TypePointer read_type_pointer(char *& data, bool& valid);
-
-    Group read_group(char *& data, bool& valid);
-    
-    Trace read_trace(char *& data, bool& valid);
     
     std::unique_ptr<PropDict> read_header(char *& data, const char * orig);
 
-    std::unique_ptr<TypeList> read_type_section(char *& data, const char * orig, bool is_trace);
+    std::unique_ptr<TypeMap> read_type_section(char *& data, const char * orig, bool is_trace);
 
     // really the same as read_header
-    std::unique_ptr<TypePtrList> read_sweep(char *& data, const char * orig);
+    std::unique_ptr<VarList> read_sweep(char *& data, const char * orig);
 
     // really the same as read_type_section
     std::unique_ptr<TraceList> read_trace_section(char *& data, const char * orig, bool is_trace);

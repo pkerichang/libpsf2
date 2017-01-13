@@ -9,10 +9,9 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
-#include <stdexcept>
 
 #include <boost/variant.hpp>
-#include "psf/common.hpp"
+#include "psfcommon.hpp"
 
 namespace psf {
 
@@ -22,10 +21,11 @@ namespace psf {
     class Property : public std::pair<std::string, PropValue> {
     public:
         Property() {}
+        // not used, but provided for convenience.
         Property(std::string name, PropValue value);
         ~Property() {}
 
-        static Property read(char *& data, bool& valid);
+        bool read(char *& data);
     };
 
     // container of properties as map for easy access.
@@ -34,7 +34,7 @@ namespace psf {
         PropDict() {}
         ~PropDict() {}
         
-        static std::unique_ptr<PropDict> read(char *& data);
+        bool read(char *& data);
     };
 
     typedef std::unordered_map<std::string, std::unique_ptr<PropDict>> NestPropDict;    

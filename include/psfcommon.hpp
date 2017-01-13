@@ -1,5 +1,5 @@
-#ifndef LIBPSF_PRIMITIVES_H_
-#define LIBPSF_PRIMITIVES_H_
+#ifndef LIBPSF_COMMON_H_
+#define LIBPSF_COMMON_H_
 
 /**
  *  This header file define methods to read primitive types from file.
