@@ -32,6 +32,7 @@ namespace psf {
     static const uint32_t HEADER_END = 1;
     static const uint32_t TYPE_END = 2;
     static const uint32_t SWEEP_END = 3;
+    static const uint32_t TRACE_END = 4;
     
     typedef boost::variant<int8_t, int32_t, double, std::complex<double>, std::string> PSFScalar;
     typedef std::vector<PSFScalar> PSFVector;
@@ -85,6 +86,25 @@ namespace psf {
 
     typedef std::vector<TypePointer> TypePtrList;
     
+    // a collection of TypePointers.
+    class Group {
+    public:
+        static const uint32_t code = 17;
+
+        Group();
+        Group(uint32_t id, std::string name, TypePtrList vec);
+        
+        ~Group();
+
+    private:
+        uint32_t m_id;
+        std::string m_name;
+        TypePtrList m_vec;
+    };
+
+    typedef boost::variant<TypePointer, Group> Trace;
+    typedef std::vector<Trace> TraceList;
+        
     // a class representing the PSF file.
     class PSFDataSet {
     public:
@@ -117,6 +137,7 @@ namespace psf {
         std::unique_ptr<PSFVector> m_swp_vals;
         std::unique_ptr<TypeList> m_type_list;
         std::unique_ptr<TypePtrList> m_sweep_list;
+        std::unique_ptr<TraceList> m_trace_list;
         
         int m_num_sweeps;
         int m_num_points;
@@ -165,13 +186,20 @@ namespace psf {
     TypeList read_type_list(char *& data);
 
     TypePointer read_type_pointer(char *& data, bool& valid);
+
+    Group read_group(char *& data, bool& valid);
+    
+    Trace read_trace(char *& data, bool& valid);
     
     std::unique_ptr<PropDict> read_header(char *& data, const char * orig);
 
     std::unique_ptr<TypeList> read_type_section(char *& data, const char * orig, bool is_trace);
 
+    // really the same as read_header
     std::unique_ptr<TypePtrList> read_sweep(char *& data, const char * orig);
 
+    // really the same as read_type_section
+    std::unique_ptr<TraceList> read_trace_section(char *& data, const char * orig, bool is_trace);
 
 }
 

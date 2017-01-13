@@ -9,8 +9,7 @@ namespace psf {
                                                                                m_array_type(array_type),
                                                                                m_data_type(data_type),
                                                                                m_typedef_tuple(typedef_tuple),
-                                                                               m_prop_dict(prop_dict) {
-    }
+                                                                               m_prop_dict(prop_dict) {}
     
     TypeDef::TypeDef() {}
 
@@ -19,12 +18,17 @@ namespace psf {
     
     TypePointer::TypePointer(uint32_t id, std::string name, uint32_t type_id,
                              PropDict prop_dict) : m_id(id), m_name(name), m_type_id(type_id),
-                                                   m_prop_dict(prop_dict) {
-    }
+                                                   m_prop_dict(prop_dict) {}
     
     TypePointer::TypePointer() {}
 
     TypePointer::~TypePointer() {}
+
+    Group::Group(uint32_t id, std::string name, TypePtrList vec) : m_id(id), m_name(name), m_vec(vec) {}
+    
+    Group::Group() {}
+
+    Group::~Group() {}
 
     
     PSFDataSet::PSFDataSet(std::string filename) : m_invert_struct(false) {
@@ -110,6 +114,9 @@ namespace psf {
         DEBUG_MSG("Reading sweeps");
         // DEBUG_MSG("Current Position = " << (data_pointer - mmap_data));
         m_sweep_list = read_sweep(data_pointer, mmap_data);
+
+        DEBUG_MSG("Reading traces");
+        m_trace_list = read_trace_section(data_pointer, mmap_data, true);
     }
     
     /**
@@ -248,6 +255,97 @@ namespace psf {
         return ans;
     }
 
+    /**
+     * This functions reads the trace section and returns the
+     * list of group or type pointers.
+     *
+     * type section format:
+     * int code = major_section
+     * int end_pos (end position of section).
+     * int code = minor_section
+     * int end_pos (end position of sub-section).
+     * (TypePointer or Group) type1
+     * (TypePointer or Group) type2
+     * ...
+     * int index_type
+     * int index_size
+     * int index_id1
+     * int index_offset1
+     * int index_id2
+     * int index_offset2
+     * ...
+     * int end_marker = TRACE_END
+     */
+    std::unique_ptr<TraceList> read_trace_section(char *& data, const char * orig, bool is_trace) {
+        std::size_t num_read = 0;
+        uint32_t code = peek_uint32(data, num_read);
+        if (code != MAJOR_SECTION_CODE) {
+            std::string msg = (boost::format("Invalid trace section code %d, expected %d") % code %
+                               MAJOR_SECTION_CODE).str();
+            throw new std::runtime_error(msg);
+        }
+        data += num_read;
+
+        uint32_t end_pos = read_uint32(data);
+        DEBUG_MSG("Trace end position = " << end_pos);
+
+        num_read = 0;
+        code = peek_uint32(data, num_read);
+        if (code != MINOR_SECTION_CODE) {
+            std::string msg = (boost::format("Invalid trace subsection code %d, expected %d") % code %
+                               MINOR_SECTION_CODE).str();
+            throw new std::runtime_error(msg);
+        }
+        data += num_read;
+        
+        uint32_t sub_end_pos = read_uint32(data);
+        DEBUG_MSG("Trace subsection end position = " << sub_end_pos);
+
+        auto ans = std::unique_ptr<TraceList>(new TraceList());
+        bool valid_type = true;
+        while (valid_type && (data - orig) < sub_end_pos) {
+            Trace temp = read_trace(data, valid_type);
+            if (valid_type) {
+                ans->push_back(temp);
+            }
+        }
+        
+        uint32_t index_type = read_uint32(data);
+        DEBUG_MSG("Trace index type = " << index_type);
+        uint32_t index_size = read_uint32(data);
+        DEBUG_MSG("Trace index size = " << index_size);
+        if (is_trace) {
+            // read trace information
+            uint32_t id, offset, extra1, extra2;
+            for(int i = 0; i < index_size; i += 4 * WORD_SIZE) {
+                id = read_uint32(data);
+                offset = read_uint32(data);
+                extra1= read_uint32(data);
+                extra2 = read_uint32(data);
+                DEBUG_MSG("trace index: (" << id << ", " << offset <<
+                          ", " << extra1 << ", " << extra2 << ")");
+            }
+        } else {
+            // read index information
+            uint32_t id, offset;
+            for(int i = 0; i < index_size; i += 2 * WORD_SIZE) {
+                id = read_uint32(data);
+                offset = read_uint32(data);
+                DEBUG_MSG("index: (" << id << ", " << offset << ")");
+            }
+        }
+
+        uint32_t end_marker = read_uint32(data);
+        DEBUG_MSG("Read end marker " << end_marker << " (should be " << TRACE_END << ")");
+        if ((data - orig) != end_pos) {
+            std::string msg = (boost::format("trace end position is not %d, something's wrong") %
+                               end_pos).str();
+            throw new std::runtime_error(msg);
+        }
+        
+        return ans;
+    }
+    
     /**
      * This functions reads the sweep section and returns the
      * sweep list.
@@ -412,9 +510,9 @@ namespace psf {
     TypePointer read_type_pointer(char *& data, bool& valid) {
         std::size_t num_read = 0;
         uint32_t code = peek_uint32(data, num_read);
-        if (code != TypeDef::code) {
+        if (code != TypePointer::code) {
             valid = false;
-            DEBUG_MSG("Invalid TypePointer code " << code << ", expected " << TypeDef::code);
+            DEBUG_MSG("Invalid TypePointer code " << code << ", expected " << TypePointer::code);
             return TypePointer();
         }
         data += num_read;
@@ -439,6 +537,79 @@ namespace psf {
         } while (valid_entry);
 
         return TypePointer(id, name, type_id, prop_dict);
+    }
+
+    /**
+     * This function reads a Group object from file.
+     *
+     * Group format:
+     * int code = group_code
+     * int id
+     * string name
+     * int length
+     * TypePointer pointer1
+     * TypePointer pointer2
+     * ...
+     *
+     */
+    Group read_group(char *& data, bool& valid) {
+        std::size_t num_read = 0;
+        uint32_t code = peek_uint32(data, num_read);
+        if (code != Group::code) {
+            valid = false;
+            DEBUG_MSG("Invalid Group code " << code << ", expected " << Group::code);
+            return Group();
+        }
+        data += num_read;
+
+        valid = true;
+        uint32_t id = read_uint32(data);
+        std::string name = read_str(data);
+        uint32_t len = read_uint32(data);
+
+        DEBUG_MSG("Group = (" << id << ", " << name << ", " << len << ")");
+
+        DEBUG_MSG("Reading TypePointer Properties");
+        bool valid_pointer = true;
+        TypePtrList vec;
+        for( int i = 0; i < len; i++) {
+            TypePointer temp = read_type_pointer(data, valid_pointer);
+            if (valid_pointer) {
+                vec.push_back(temp);
+            } else {
+                std::string msg = (boost::format("Group expects %d types, but only got %d") %
+                                   len % i).str();
+                throw new std::runtime_error(msg);
+            }
+        }
+
+        return Group(id, name, vec);
+    }
+
+    /**
+     * This function reads a Trace object from file, which is either a
+     * Group or a TypePointer.
+     */    
+    Trace read_trace(char *& data, bool& valid) {
+        // don't increment, as either Group or TypePointer will
+        // increment for us.
+        std::size_t num_read;
+        uint32_t code = peek_uint32(data, num_read);
+        
+        valid = true;
+        Trace val;
+        switch(code) {
+        case Group::code :
+            val = read_group(data, valid);
+            return val;
+        case TypePointer::code :
+            val = read_type_pointer(data, valid);
+            return val;
+        default :
+            valid = false;
+            DEBUG_MSG("Cannot parse trace, invalid trace code " << code);
+            return val;
+        }
     }
     
     /**
