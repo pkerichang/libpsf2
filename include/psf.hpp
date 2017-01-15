@@ -18,6 +18,7 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/variant.hpp>
 #include <boost/format.hpp>
+
 #include "psfproperty.hpp"
 #include "psftypes.hpp"
 
@@ -25,12 +26,11 @@ namespace psf {
 
     static const uint32_t MAJOR_SECTION_CODE = 21;
     static const uint32_t MINOR_SECTION_CODE = 22;
+	static const uint32_t SWP_WINDOW_SECTION_CODE = 16;
     static const uint32_t HEADER_END = 1;
     static const uint32_t TYPE_END = 2;
     static const uint32_t SWEEP_END = 3;
     static const uint32_t TRACE_END = 4;
-
-    typedef std::vector<std::string> StrVector;
 
     typedef boost::variant<int8_t, int32_t, double, std::complex<double>, std::string> PSFScalar;
     typedef std::vector<PSFScalar> PSFVector;
@@ -55,45 +55,7 @@ namespace psf {
         PropDict m_prop_dict;
     };  
     
-    // a class representing the PSF file.
-    class PSFDataSet {
-    public:
-        PSFDataSet(std::string filename);
-        PSFDataSet(std::string filename, bool invert_struct);
-        ~PSFDataSet();
-        
-        PropDict* get_prop_dict() const;
-        NestPropDict* get_scalar_prop_dict() const;
-        
-        StrVector* get_sweep_names() const;
-        PSFVector* get_sweep_values() const;
-        
-        int get_num_sweeps() const;
-        int get_num_points() const;
-        bool is_swept() const;
-        bool is_struct_inverted() const;
-        
-        PropDict* get_scalar_dict() const;
-        VecDict* get_vector_dict() const;
-        
-    private:
-        void open(std::string filename);
-        
-        std::unique_ptr<PropDict> m_prop_dict;
-        std::unique_ptr<NestPropDict> m_scalar_prop_dict;
-        std::unique_ptr<PropDict> m_scalar_dict;
-        std::unique_ptr<VecDict> m_vector_dict;
-        std::unique_ptr<StrVector> m_swp_vars;
-        std::unique_ptr<PSFVector> m_swp_vals;
-        std::unique_ptr<TypeMap> m_type_map;
-        std::unique_ptr<VarList> m_sweep_list;
-        std::unique_ptr<TraceList> m_trace_list;
-        
-        int m_num_sweeps;
-        int m_num_points;
-        bool m_swept;
-        bool m_invert_struct;
-    };
+	void read_psf(std::string fname);
 
     uint32_t read_section_preamble(char *&data);
     
@@ -105,9 +67,9 @@ namespace psf {
     std::unique_ptr<VarList> read_sweep(char *& data, const char * orig);
 
     // really the same as read_type_section
-    std::unique_ptr<TraceList> read_trace(char *& data, const char * orig);
+    std::unique_ptr<VarList> read_trace(char *& data, const char * orig);
 
-    void read_sweep_values_test(char *& data, const char * orig);
+    void read_values_swp_window(char *& data, const char * orig, uint32_t num_points, uint32_t windowsize);
     
 }
 

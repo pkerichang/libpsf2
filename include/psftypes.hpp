@@ -2,7 +2,7 @@
 #define LIBPSF_TYPEDEF_H_
 
 /**
- *  This header file define methods to read property objects
+ *  This header file define methods to read variable and type objects
  */
 
 #include <vector>
@@ -71,21 +71,10 @@ namespace psf {
         
         bool read(char *& data);
 
-    private:
         uint32_t m_id;
         std::string m_name;
         VarList m_vec;
     };
-
-    class Trace : public boost::variant<Variable, Group> {
-    public:
-        Trace() {}
-        ~Trace() {}
-
-        bool read(char *& data);
-    };
-
-    typedef std::vector<Trace> TraceList;
     
 }
 

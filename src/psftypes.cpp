@@ -176,34 +176,3 @@ bool Group::read(char *& data) {
     return true;
 }
 
-/**
- * This function reads a Trace object from file, which is either a
- * Group or a Variable.
- */    
-bool Trace::read(char *& data) {
-    // don't increment, as either Group or Variable will
-    // increment for us.
-    std::size_t num_read;
-    uint32_t code = peek_uint32(data, num_read);
-
-    Group grp;
-    Variable var;
-    bool valid;
-    switch(code) {
-    case Group::code :
-        valid = grp.read(data);
-        if (valid) {
-            boost::variant<Variable, Group>::operator=(grp);
-        }
-        return valid;
-    case Variable::code :
-        valid = var.read(data);
-        if (valid) {
-            boost::variant<Variable, Group>::operator=(var);
-        }
-        return valid;
-    default :
-        DEBUG_MSG("Cannot parse trace, invalid trace code " << code);
-        return false;
-    }
-}

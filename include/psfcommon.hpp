@@ -2,7 +2,7 @@
 #define LIBPSF_COMMON_H_
 
 /**
- *  This header file define methods to read primitive types from file.
+ *  This header file define methods to read primitive types from binary file.
  */
 
 #include <string>

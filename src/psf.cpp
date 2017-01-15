@@ -5,68 +5,12 @@ namespace bip = boost::interprocess;
 
 namespace psf {
     
-    PSFDataSet::PSFDataSet(std::string filename) : m_invert_struct(false) {
-        open(filename);
-    }
+	inline uint32_t read_section_preamble(char *& data, uint32_t section_code);
+	inline void read_section_end(char *& data, const char * orig, uint32_t end_pos, uint32_t end_marker);
+	inline void read_index(char *& data, bool is_trace);
 
-    PSFDataSet::PSFDataSet(std::string filename, bool invert_struct) : m_invert_struct(invert_struct) {
-        open(filename);
-    }
-
-    PSFDataSet::~PSFDataSet() {}
-
-    PropDict* PSFDataSet::get_prop_dict() const {
-        return m_prop_dict.get();
-    }
-
-    NestPropDict* PSFDataSet::get_scalar_prop_dict() const {
-        return m_scalar_prop_dict.get();
-    }
-
-    StrVector* PSFDataSet::get_sweep_names() const {
-        return m_swp_vars.get();
-    }
-
-    PSFVector* PSFDataSet::get_sweep_values() const {
-        return m_swp_vals.get();
-    }
-
-    int PSFDataSet::get_num_sweeps() const {
-        return m_num_sweeps;
-    }
-
-    int PSFDataSet::get_num_points() const {
-        return m_num_points;
-    }
-
-    bool PSFDataSet::is_swept() const {
-        return m_swept;
-    }
-
-    bool PSFDataSet::is_struct_inverted() const {
-        return m_invert_struct;
-    }
-
-    PropDict* PSFDataSet::get_scalar_dict() const {
-        return m_scalar_dict.get();
-    }
-
-    VecDict* PSFDataSet::get_vector_dict() const {
-        return m_vector_dict.get();
-    }
-
-    void PSFDataSet::open(std::string filename) {
+    void read_psf(std::string filename) {
         // initialize members
-    
-        m_scalar_prop_dict = std::unique_ptr<NestPropDict>(new NestPropDict());
-        m_scalar_dict = std::unique_ptr<PropDict>(new PropDict());
-        m_vector_dict = std::unique_ptr<VecDict>(new VecDict());
-        m_swp_vars = std::unique_ptr<StrVector>(new StrVector());
-        m_swp_vals = std::unique_ptr<PSFVector>(new PSFVector());
-    
-        m_num_sweeps = 1;
-        m_num_points = 1;
-        m_swept = false;
     
         // create memory map file
         bip::file_mapping mapping(filename.c_str(), bip::read_only);
@@ -80,22 +24,221 @@ namespace psf {
         DEBUG_MSG("First word value = " << first_word);
     
         DEBUG_MSG("Reading header");
-        m_prop_dict = read_header(data_pointer, mmap_data);
+        auto prop_dict = read_header(data_pointer, mmap_data);
     
         DEBUG_MSG("Reading types");
-        m_type_map = read_type(data_pointer, mmap_data);
+        auto type_map = read_type(data_pointer, mmap_data);
     
         DEBUG_MSG("Reading sweeps");
-        // DEBUG_MSG("Current Position = " << (data_pointer - mmap_data));
-        m_sweep_list = read_sweep(data_pointer, mmap_data);
+        auto sweep_list = read_sweep(data_pointer, mmap_data);
     
         DEBUG_MSG("Reading traces");
-        m_trace_list = read_trace(data_pointer, mmap_data);
+        auto trace_list = read_trace(data_pointer, mmap_data);
     
+		if (sweep_list->size() == 0) {
+			throw new std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
+		}
+
+		if (sweep_list->size() > 1) {
+			throw new std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
+		}
+
+		auto prop_iter = prop_dict->find("PSF window size");
+		if (prop_iter == prop_dict->end()) {
+			throw new std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
+		}
+		uint32_t win_size = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
+
+		prop_iter = prop_dict->find("PSF sweep points");
+		if (prop_iter == prop_dict->end()) {
+			throw new std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
+		}
+		uint32_t num_points_data = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
+
         DEBUG_MSG("Reading valuess");
-        read_sweep_values_test(data_pointer, mmap_data);
+        read_values_swp_window(data_pointer, mmap_data, num_points_data, win_size);
     
     }
+
+	/**
+	* This functions reads the header section and returns the
+	* property dictionary.
+	*
+	* header section body format:
+	* PropEntry entry1
+	* PropEntry entry2
+	* ...
+	*/
+	std::unique_ptr<PropDict> read_header(char *& data, const char * orig) {
+
+		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+
+		auto ans = std::unique_ptr<PropDict>(new PropDict());
+		ans->read(data);
+
+		read_section_end(data, orig, end_pos, HEADER_END);
+
+		return ans;
+	}
+
+	/**
+	* This functions reads the type section and returns the
+	* list of type definitions.
+	*
+	* type section body format:
+	* subsection{
+	* TypeDef type1
+	* TypeDef type2
+	* ...
+	* }
+	* int index_type
+	* int index_size
+	* int index_id1
+	* int index_offset1
+	* int index_id2
+	* int index_offset2
+	* ...
+	* int end_marker = TYPE_END
+	*/
+	std::unique_ptr<TypeMap> read_type(char *& data, const char * orig) {
+
+		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+		uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
+
+		auto ans = std::unique_ptr<TypeMap>(new TypeMap());
+		bool valid_type = true;
+		while (valid_type && (data - orig) < sub_end_pos) {
+			TypeDef temp;
+			valid_type = temp.read(data, ans.get());
+		}
+
+		read_index(data, false);
+		read_section_end(data, orig, end_pos, TYPE_END);
+
+		return ans;
+	}
+
+	/**
+	* This functions reads the sweep section and returns the
+	* sweep list.
+	*
+	* sweep body format:
+	* Variable type1
+	* Variable type2
+	* ...
+	*/
+	std::unique_ptr<VarList> read_sweep(char *& data, const char * orig) {
+
+		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+
+		DEBUG_MSG("Reading sweep types");
+		auto ans = std::unique_ptr<VarList>(new VarList());
+		bool valid_type = true;
+		while (valid_type) {
+			Variable temp;
+			valid_type = temp.read(data);
+			if (valid_type) {
+				ans->push_back(temp);
+			}
+		}
+
+		read_section_end(data, orig, end_pos, SWEEP_END);
+
+		return ans;
+	}
+
+	/**
+	* This functions reads the trace section and returns the
+	* list of group or type pointers.
+	*
+	* trace section body format:
+	* subsection{
+	* (Variable or Group) type1
+	* (Variable or Group) type2
+	* ...
+	* }
+	* int index_type
+	* int index_size
+	* int index_id1
+	* int index_offset1
+	* int extra1
+	* int extra1
+	* int index_id2
+	* int index_offset2
+	* int extra2
+	* int extra2
+	* ...
+	* int end_marker = TRACE_END
+	*/
+	std::unique_ptr<VarList> read_trace(char *& data, const char * orig) {
+
+		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+		uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
+
+		// each trace entry is either a Variable or Group.
+		// however, since we're just translating PSF to HDF5,
+		// we don't really care about hierarchy, so we're just
+		// going to flatten everything to Variables.
+		auto ans = std::unique_ptr<VarList>(new VarList());
+		bool valid_type = true;
+		while (valid_type && (data - orig) < sub_end_pos) {
+			// try reading as Group
+			Group grp;
+			valid_type = grp.read(data);
+			if (valid_type) {
+				// flatten Group into our variable list
+				ans->insert(ans->end(), grp.m_vec.begin(), grp.m_vec.end());
+			} else {
+				// Group failed, try reading as Variable.
+				Variable var;
+				valid_type = var.read(data);
+				if (valid_type) {
+					ans->push_back(var);
+				}
+			}
+		}
+
+		read_index(data, true);
+		read_section_end(data, orig, end_pos, TRACE_END);
+
+		return ans;
+	}
+
+	void read_values_swp_window(char *& data, const char * orig, uint32_t np_tot, uint32_t windowsize) {
+
+		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+
+		uint32_t zp_code = read_uint32(data);
+		DEBUG_MSG("zero padding code = " << zp_code);
+
+		uint32_t zp_size = read_uint32(data);
+		DEBUG_MSG("zero padding size = " << zp_size << ", skipping");
+		data += zp_size;
+
+		uint32_t code = read_uint32(data);
+		if (code != SWP_WINDOW_SECTION_CODE) {
+			throw new std::runtime_error((boost::format("Expect code = %d, but got %d") % 
+				SWP_WINDOW_SECTION_CODE % code).str());
+		}
+
+		uint32_t size_word = read_uint32(data);
+		uint32_t windows_left = size_word >> 16;
+		uint32_t num_points = size_word & 0xffff;
+		DEBUG_MSG("Number of points in window = " << windows_left);
+		DEBUG_MSG("Number of valid data in window = " << num_points);
+		
+		DEBUG_MSG("Printing time");
+		for (uint32_t i = 0; i < num_points; i++) {
+			double vald = read_double(data);
+			DEBUG_MSG(boost::format("%.6g") % vald);
+		}
+		data += windowsize - 8 * num_points;
+		DEBUG_MSG("Printing data1");
+		for (uint32_t i = 0; i < num_points; i++) {
+			double vald = read_double(data);
+			DEBUG_MSG(boost::format("%.6g") % vald);
+		}
+	}
     
     /**
      * Read the section preamble.  Returns end position index.
@@ -164,173 +307,6 @@ namespace psf {
             }
         }
 
-    }
-    
-    
-    /**
-     * This functions reads the header section and returns the
-     * property dictionary.
-     *
-     * header section body format:
-     * PropEntry entry1
-     * PropEntry entry2
-     * ...
-     */
-    std::unique_ptr<PropDict> read_header(char *& data, const char * orig) {
-
-        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
-
-        auto ans = std::unique_ptr<PropDict>(new PropDict());
-        ans->read(data);    
-        
-        read_section_end(data, orig, end_pos, HEADER_END);
-        
-        return ans;
-    }
-
-    /**
-     * This functions reads the type section and returns the
-     * list of type definitions.
-     *
-     * type section body format:
-     * subsection{
-     * TypeDef type1
-     * TypeDef type2
-     * ...
-     * }
-     * int index_type
-     * int index_size
-     * int index_id1
-     * int index_offset1
-     * int index_id2
-     * int index_offset2
-     * ...
-     * int end_marker = TYPE_END
-     */
-    std::unique_ptr<TypeMap> read_type(char *& data, const char * orig) {
-
-        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
-        uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
-        
-        auto ans = std::unique_ptr<TypeMap>(new TypeMap());
-        bool valid_type = true;
-        while (valid_type && (data - orig) < sub_end_pos) {
-            TypeDef temp;
-            valid_type = temp.read(data, ans.get());
-        }
-
-        read_index(data, false);
-        read_section_end(data, orig, end_pos, TYPE_END);
-    
-        return ans;
-    }
-
-    /**
-     * This functions reads the sweep section and returns the
-     * sweep list.
-     *
-     * sweep body format:
-     * Variable type1
-     * Variable type2
-     * ...
-     */
-    std::unique_ptr<VarList> read_sweep(char *& data, const char * orig) {
-
-        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
-
-        DEBUG_MSG("Reading sweep types");
-        auto ans = std::unique_ptr<VarList>(new VarList());
-        bool valid_type = true;
-        while (valid_type) {
-            Variable temp;
-            valid_type = temp.read(data);
-            if (valid_type) {
-                ans->push_back(temp);
-            }
-        }
-
-        read_section_end(data, orig, end_pos, SWEEP_END);
-             
-        return ans;
-    }
-
-    /**
-     * This functions reads the trace section and returns the
-     * list of group or type pointers.
-     *
-     * trace section body format:
-     * subsection{
-     * (Variable or Group) type1
-     * (Variable or Group) type2
-     * ...
-     * }
-     * int index_type
-     * int index_size
-     * int index_id1
-     * int index_offset1
-     * int extra1
-     * int extra1
-     * int index_id2
-     * int index_offset2
-     * int extra2
-     * int extra2
-     * ...
-     * int end_marker = TRACE_END
-     */
-    std::unique_ptr<TraceList> read_trace(char *& data, const char * orig) {
-
-        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
-        uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
-
-        auto ans = std::unique_ptr<TraceList>(new TraceList());
-        bool valid_type = true;
-        while (valid_type && (data - orig) < sub_end_pos) {
-            Trace temp;
-            valid_type = temp.read(data);
-            if (valid_type) {
-                ans->push_back(temp);
-            }
-        }
-    
-        read_index(data, true);
-        read_section_end(data, orig, end_pos, TRACE_END);
-    
-        return ans;
-    }
-
-    void read_sweep_values_test(char *& data, const char * orig) {
-
-        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
-    
-        int windowsize = 4096;
-    
-        uint32_t zp_code = read_uint32(data);
-        DEBUG_MSG("zero padding code = " << zp_code);
-    
-        uint32_t zp_size = read_uint32(data);
-        DEBUG_MSG("zero padding size = " << zp_size << ", skipping");
-    
-        data += zp_size;
-        uint32_t vali, np;
-        std::string vals;
-        double vald;
-    
-        vali = read_uint32(data);
-        DEBUG_MSG(boost::format("%d %x") % vali % vali);
-        vali = read_uint32(data);
-        DEBUG_MSG(boost::format("%d %x") % vali % vali);
-        np = (vali >> 16) & 0xffff;
-        DEBUG_MSG(boost::format("%d") % np);
-        for (uint32_t i = 0; i < np; i++) {
-            vald = read_double(data);
-            DEBUG_MSG(boost::format("%.6g") % vald);
-        }
-        data += windowsize - 8 * np;
-    
-        for (uint32_t i = 0; i < np; i++) {
-            vald = read_double(data);
-            DEBUG_MSG(boost::format("%.6g") % vald);
-        }
     }
 
     /**
