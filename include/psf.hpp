@@ -62,8 +62,8 @@ namespace psf {
     std::unique_ptr<VarList> read_trace(std::ifstream & data);
 
     void read_values_swp_window(std::ifstream & data, uint32_t num_points,
-		uint32_t windowsize, const TypeDef & swp_type, 
-		std::vector<TypeDef> * trace_types);
+		uint32_t windowsize, const Variable & swp_var, 
+		VarList * trace_list, TypeMap * type_map);
     
 }
 

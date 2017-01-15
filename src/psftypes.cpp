@@ -90,6 +90,7 @@ bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * typ
 	std::ostringstream strbuilder;
 	m_read_offset = 0;
 	m_read_stride = 1;
+	std::string rname("r"), iname("i");
 	switch (m_data_type) {
 	case TypeDef::TYPEID_INT8 :
 		m_h5_read_type = H5::PredType::STD_I8BE;
@@ -110,11 +111,11 @@ bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * typ
 		break;
 	case TypeDef::TYPEID_COMPLEXDOUBLE :
 		comp_read_type = H5::CompType(2 * sizeof(double));
-		comp_read_type.insertMember("r", 0, H5::PredType::IEEE_F64BE);
-		comp_read_type.insertMember("i", sizeof(double), H5::PredType::IEEE_F64BE);
+		comp_read_type.insertMember(rname, 0, H5::PredType::IEEE_F64BE);
+		comp_read_type.insertMember(iname, sizeof(double), H5::PredType::IEEE_F64BE);
 		comp_write_type = H5::CompType(2 * sizeof(double));
-		comp_write_type.insertMember("r", 0, H5::PredType::IEEE_F64LE);
-		comp_write_type.insertMember("i", sizeof(double), H5::PredType::IEEE_F64LE);
+		comp_write_type.insertMember(rname, 0, H5::PredType::IEEE_F64LE);
+		comp_write_type.insertMember(iname, sizeof(double), H5::PredType::IEEE_F64LE);
 
 		m_h5_read_type = comp_read_type;
 		m_h5_write_type = comp_write_type;

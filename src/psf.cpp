@@ -47,10 +47,11 @@ namespace psf {
 		uint32_t win_size = prop_iter->second.m_ival;
 
 		// check that sweep variable is a scalar type.
-		const TypeDef & swp_type = type_map->at((sweep_list->at(0)).m_type_id);
+		const Variable & swp_var = sweep_list->at(0);
+		const TypeDef & swp_type = type_map->at(swp_var.m_type_id);
 		if (!swp_type.m_is_supported) {
 			std::ostringstream builder;
-			builder << "Sweep variable " << sweep_list->at(0).m_name <<
+			builder << "Sweep variable " << swp_var.m_name <<
 				" with type \"" << swp_type.m_name << "\" (data type = " << 
 				swp_type.m_type_name << " ) not supported.";
 			throw std::runtime_error(builder.str());
@@ -58,7 +59,6 @@ namespace psf {
 
 		// check that all output variables are scalar types.
 		size_t num_traces = trace_list->size();
-		auto trace_types = std::unique_ptr<std::vector<TypeDef>>(new std::vector<TypeDef>(num_traces));
 		for (auto output : *trace_list.get()) {
 			const TypeDef & output_type = type_map->at(output.m_type_id);
 			if (!output_type.m_is_supported) {
@@ -68,7 +68,6 @@ namespace psf {
 					output_type.m_type_name << " ) not supported.";
 				throw std::runtime_error(builder.str());
 			}
-			trace_types->push_back(output_type);
 		}
 
 		// check that number of sweep points is recorded.
@@ -80,7 +79,7 @@ namespace psf {
 
 		DEBUG_MSG("Reading valuess");
 		read_values_swp_window(data, num_points_data, win_size,
-			swp_type, trace_types.get());
+			swp_var, trace_list.get(), type_map.get());
 
 		data.close();
     }
@@ -229,9 +228,9 @@ namespace psf {
 		return ans;
 	}
 
-	void read_values_swp_window(std::ifstream & data, uint32_t num_points,
-		uint32_t windowsize, const TypeDef & swp_type,
-		std::vector<TypeDef> * trace_types) {
+	void read_values_swp_window(std::ifstream & data, uint32_t num_points, 
+		uint32_t windowsize, const Variable & swp_var,
+		VarList * trace_list, TypeMap * type_map) {
 
 		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
 
@@ -256,42 +255,58 @@ namespace psf {
 		DEBUG_MSG("Size word left value = " << size_left);
 		DEBUG_MSG("Number of valid data in window = " << np_window);
 		
-		std::string fname("test.hdf5"), xname("time"), yname("vout");
+		/*
+		// open file
+		std::string fname("test.hdf5");
+		hsize_t file_dim[1] = { num_points };
+		H5::DataSpace file_space(1, file_dim, file_dim);
 		auto file = std::unique_ptr<H5::H5File>(new H5::H5File(fname.c_str(), H5F_ACC_TRUNC));
 
-		hsize_t dims1[1] = { 2 * num_points };
-		hsize_t dims2[1] = { num_points };
-		hsize_t offset[1] = { 0 };
-		hsize_t count[1] = { num_points };
-		hsize_t stride[1] = { 1 };
-		H5::DataSpace file_space(1, dims1, dims1), mem_space(1, count, count);
-		H5::DataSet time = file->createDataSet(xname.c_str(), H5::PredType::IEEE_F64LE, file_space);
-		H5::DataSet vout = file->createDataSet(yname.c_str(), H5::PredType::IEEE_F64LE, file_space);
+		// create sweep dataset
+		const TypeDef & swp_type = type_map->at(swp_var.m_type_id);
+		auto swp_dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+			file->createDataSet(swp_var.m_name.c_str(), swp_type.m_h5_write_type, file_space)));
 
-		// currently assume we only have one sweep variable.
+		// create output datasets
+		auto out_dsets = std::vector<std::unique_ptr<H5::DataSet>>(trace_list->size());
+		for (auto out_var : *trace_list) {
+			const TypeDef & out_type = type_map->at(out_var.m_type_id);
+			out_dsets.push_back(std::move(std::unique_ptr<H5::DataSet>(new H5::DataSet(
+				file->createDataSet(out_var.m_name.c_str(), out_type.m_h5_write_type, file_space)))));
+		}
+
+		hsize_t mem_dim[1] = { np_window };
+		hsize_t count[1] = { np_window };
+		hsize_t file_offset[1] = { 0 };
+		hsize_t file_stride[1] = { 1 };
+		H5::DataSpace mem_space(1, mem_dim, mem_dim);
+
 		uint32_t points_read = 0;
-		//while (points_read < num_points) {
-		DEBUG_MSG("Printing sweep variable");
-		char * vec = new char[np_window * 8];
-		data.read(vec, np_window * 8);
-		file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
-		time.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
-		offset[0] = num_points;
-		file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
-		time.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
-		time.close();
-		data.seekg(windowsize - 8 * np_window, std::ios::cur);
-		data.read(vec, np_window * 8);
-		offset[0] = 0;
-		file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
-		vout.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
-		offset[0] = num_points;
-		file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
-		vout.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
-		vout.close();
-		delete vec;
-		file->close();
-		//}
+		auto buffer = std::unique_ptr<char[]>(new char[windowsize]);
+		while (points_read < num_points) {
+			data.read(buffer.get(), windowsize);
+			// write sweep values
+			file_offset[0] = points_read;
+			file_space.selectHyperslab(H5S_SELECT_SET, count, file_offset, file_stride, file_stride);
+			mem_space.selec
+			time.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
+			offset[0] = num_points;
+			file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
+			time.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
+			time.close();
+			data.seekg(windowsize - 8 * np_window, std::ios::cur);
+			data.read(vec, np_window * 8);
+			offset[0] = 0;
+			file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
+			vout.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
+			offset[0] = num_points;
+			file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
+			vout.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
+			vout.close();
+			delete vec;
+			file->close();
+		}
+		*/
 	}
     
     /**
