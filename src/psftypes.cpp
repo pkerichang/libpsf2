@@ -81,44 +81,97 @@ bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * typ
     DEBUG_MSG("TypeDef = (" << m_id << ", " << m_name <<
               ", " << m_array_type << ", " << m_data_type << ")");
 
-    if (m_data_type == TypeDef::struct_code) {
-        // data type is a struct
-        DEBUG_MSG("Reading TypeDef subtypes");
-        m_subtypes = read_type_list(data, type_lookup);
-    }
+	m_is_supported = true;
+	// construct HDF5 data type
+	H5::CompType comp_read_type;
+	H5::CompType comp_write_type;
+	std::vector<int> subtypes;
+	hsize_t read_size = 0, write_size = 0;
+	std::ostringstream strbuilder;
+	m_read_offset = 0;
+	m_read_stride = 1;
+	switch (m_data_type) {
+	case TypeDef::TYPEID_INT8 :
+		m_h5_read_type = H5::PredType::STD_I8BE;
+		m_h5_write_type = H5::PredType::STD_I8LE;
+		m_read_offset = WORD_SIZE - BYTE_SIZE;
+		m_read_stride = WORD_SIZE;
+		m_type_name = "int8";
+		break;
+	case TypeDef::TYPEID_INT32 :
+		m_h5_read_type = H5::PredType::STD_I32BE;
+		m_h5_write_type = H5::PredType::STD_I32LE;
+		m_type_name = "int32";
+		break;
+	case TypeDef::TYPEID_DOUBLE :
+		m_h5_read_type = H5::PredType::IEEE_F64BE;
+		m_h5_write_type = H5::PredType::IEEE_F64LE;
+		m_type_name = "double";
+		break;
+	case TypeDef::TYPEID_COMPLEXDOUBLE :
+		comp_read_type = H5::CompType(2 * sizeof(double));
+		comp_read_type.insertMember("r", 0, H5::PredType::IEEE_F64BE);
+		comp_read_type.insertMember("i", sizeof(double), H5::PredType::IEEE_F64BE);
+		comp_write_type = H5::CompType(2 * sizeof(double));
+		comp_write_type.insertMember("r", 0, H5::PredType::IEEE_F64LE);
+		comp_write_type.insertMember("i", sizeof(double), H5::PredType::IEEE_F64LE);
+
+		m_h5_read_type = comp_read_type;
+		m_h5_write_type = comp_write_type;
+		m_type_name = "complex";
+		break;
+	case TypeDef::TYPEID_STRUCT :
+		// read subtype definitions first
+		subtypes = read_type_list(data, type_lookup);
+		// check all subtypes are supported, calculate total size, and build string name.
+		strbuilder << "struct( ";
+		for (int sub_id : subtypes) {
+			const TypeDef & sub = type_lookup->at(sub_id);
+			strbuilder << sub.m_type_name << ", ";
+			if (!sub.m_is_supported) {
+				// all subtypes must be supported.
+				m_is_supported = false;
+			} else {
+				read_size += sub.m_h5_read_type.getSize();
+				write_size += sub.m_h5_write_type.getSize();
+			}
+		}
+		strbuilder << ")";
+		m_type_name = strbuilder.str();
+		if (m_is_supported) {
+			// all subtypes are supported.
+			comp_read_type = H5::CompType(read_size);
+			comp_write_type = H5::CompType(write_size);
+			// reuse read_size and write_size as offsets
+			read_size = write_size = 0;
+			for (int sub_id : subtypes) {
+				const TypeDef & sub = type_lookup->at(sub_id);
+				comp_read_type.insertMember(sub.m_name, read_size, sub.m_h5_read_type);
+				read_size += sub.m_h5_read_type.getSize();
+				comp_write_type.insertMember(sub.m_name, write_size, sub.m_h5_write_type);
+				write_size += sub.m_h5_write_type.getSize();
+			}
+			m_h5_read_type = comp_read_type;
+			m_h5_write_type = comp_write_type;
+		}
+		break;
+	case TypeDef::TYPEID_STRING :
+		m_type_name = "string";
+		m_is_supported = false;
+	case TypeDef::TYPEID_ARRAY :
+		m_type_name = "array";
+		m_is_supported = false;
+	default :
+		strbuilder << "unknown (id = " << m_data_type << ")";
+		m_type_name = strbuilder.str();
+		m_is_supported = false;
+	}
     
     // serialize properties
     DEBUG_MSG("Reading TypeDef Properties");
     m_prop_dict.read(data);
     type_lookup->emplace(m_id, *this);
     return true;
-}
-
-/**
- * Reads a scalar of this type from the given binary data.
- */
-PSFScalar TypeDef::read_scalar(std::ifstream & data) const {
-	PSFScalar ans;
-	double re, im;
-	switch (m_data_type) {
-	case TypeDef::TYPEID_INT8 :
-		ans = read_int8(data);
-		return ans;
-	case TypeDef::TYPEID_INT32 :
-		ans = read_int32(data);
-		return ans;
-	case TypeDef::TYPEID_DOUBLE :
-		ans = read_double(data);
-		return ans;
-	case TypeDef::TYPEID_COMPLEXDOUBLE :
-		re = read_double(data);
-		im = read_double(data);
-		ans = std::complex<double>(re, im);
-		return ans;
-	default :
-		// should never get here; we have checks before already.  Just return empty scalar. 
-		return ans;
-	}
 }
 
 /**
@@ -190,9 +243,10 @@ bool Group::read(std::ifstream & data) {
         if (valid) {
             m_vec.push_back(temp);
         } else {
-            std::string msg = (boost::format("Group expects %d types, but only got %d") %
-                               len % i).str();
-            throw std::runtime_error(msg);
+			std::ostringstream builder;
+			builder << "Group expects " << len << 
+				" types, but only got " << i << " valid types.";
+            throw std::runtime_error(builder.str());
         }
     }
     

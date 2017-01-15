@@ -44,12 +44,16 @@ namespace psf {
 		if (prop_iter == prop_dict->end()) {
 			throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
 		}
-		uint32_t win_size = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
+		uint32_t win_size = prop_iter->second.m_ival;
 
 		// check that sweep variable is a scalar type.
 		const TypeDef & swp_type = type_map->at((sweep_list->at(0)).m_type_id);
-		if (!swp_type.is_scalar_type()) {
-			throw std::runtime_error("Sweep variable is not a scalar type (char, int, double, or complex).");
+		if (!swp_type.m_is_supported) {
+			std::ostringstream builder;
+			builder << "Sweep variable " << sweep_list->at(0).m_name <<
+				" with type \"" << swp_type.m_name << "\" (data type = " << 
+				swp_type.m_type_name << " ) not supported.";
+			throw std::runtime_error(builder.str());
 		}
 
 		// check that all output variables are scalar types.
@@ -57,9 +61,12 @@ namespace psf {
 		auto trace_types = std::unique_ptr<std::vector<TypeDef>>(new std::vector<TypeDef>(num_traces));
 		for (auto output : *trace_list.get()) {
 			const TypeDef & output_type = type_map->at(output.m_type_id);
-			if (!output_type.is_scalar_type()) {
-				throw std::runtime_error((boost::format("Output variable %s is not a scalar type (char, int double, or complex).")
-					% output.m_name).str());
+			if (!output_type.m_is_supported) {
+				std::ostringstream builder;
+				builder << "Output variable " << output.m_name <<
+					" with type \"" << output_type.m_name << "\" (data type = " <<
+					output_type.m_type_name << " ) not supported.";
+				throw std::runtime_error(builder.str());
 			}
 			trace_types->push_back(output_type);
 		}
@@ -69,7 +76,7 @@ namespace psf {
 		if (prop_iter == prop_dict->end()) {
 			throw std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
 		}
-		uint32_t num_points_data = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
+		uint32_t num_points_data = prop_iter->second.m_ival;
 
 		DEBUG_MSG("Reading valuess");
 		read_values_swp_window(data, num_points_data, win_size,
@@ -237,8 +244,10 @@ namespace psf {
 
 		uint32_t code = read_uint32(data);
 		if (code != SWP_WINDOW_SECTION_CODE) {
-			throw std::runtime_error((boost::format("Expect code = %d, but got %d") % 
-				SWP_WINDOW_SECTION_CODE % code).str());
+			std::ostringstream builder;
+			builder << "Expect code = " << SWP_WINDOW_SECTION_CODE <<
+				", but got " << code;
+			throw std::runtime_error(builder.str());
 		}
 
 		uint32_t size_word = read_uint32(data);
@@ -250,10 +259,14 @@ namespace psf {
 		std::string fname("test.hdf5"), xname("time"), yname("vout");
 		auto file = std::unique_ptr<H5::H5File>(new H5::H5File(fname.c_str(), H5F_ACC_TRUNC));
 
-		hsize_t dims[1] = { num_points };
-		H5::DataSpace dspace1(1, dims), dspace2(1, dims);
-		H5::DataSet time = file->createDataSet(xname.c_str(), H5::PredType::IEEE_F64LE, dspace1);
-		H5::DataSet vout = file->createDataSet(yname.c_str(), H5::PredType::IEEE_F64LE, dspace2);
+		hsize_t dims1[1] = { 2 * num_points };
+		hsize_t dims2[1] = { num_points };
+		hsize_t offset[1] = { 0 };
+		hsize_t count[1] = { num_points };
+		hsize_t stride[1] = { 1 };
+		H5::DataSpace file_space(1, dims1, dims1), mem_space(1, count, count);
+		H5::DataSet time = file->createDataSet(xname.c_str(), H5::PredType::IEEE_F64LE, file_space);
+		H5::DataSet vout = file->createDataSet(yname.c_str(), H5::PredType::IEEE_F64LE, file_space);
 
 		// currently assume we only have one sweep variable.
 		uint32_t points_read = 0;
@@ -261,11 +274,20 @@ namespace psf {
 		DEBUG_MSG("Printing sweep variable");
 		char * vec = new char[np_window * 8];
 		data.read(vec, np_window * 8);
-		time.write(vec, H5::PredType::IEEE_F64BE);
+		file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
+		time.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
+		offset[0] = num_points;
+		file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
+		time.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
 		time.close();
 		data.seekg(windowsize - 8 * np_window, std::ios::cur);
 		data.read(vec, np_window * 8);
-		vout.write(vec, H5::PredType::IEEE_F64BE);
+		offset[0] = 0;
+		file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
+		vout.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
+		offset[0] = num_points;
+		file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
+		vout.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
 		vout.close();
 		delete vec;
 		file->close();
@@ -282,9 +304,9 @@ namespace psf {
     inline uint32_t read_section_preamble(std::ifstream & data, uint32_t section_code) {
         uint32_t code = read_uint32(data);
         if (code != section_code) {
-            std::string msg = (boost::format("Invalid section code %d, expected %d") % code %
-                               section_code).str();
-            throw std::runtime_error(msg);
+			std::ostringstream builder;
+			builder << "Invalid section code " << code << ", expected " << section_code;
+            throw std::runtime_error(builder.str());
         }
     
         uint32_t end_pos = read_uint32(data);
@@ -303,9 +325,9 @@ namespace psf {
         uint32_t marker = read_uint32(data);
         DEBUG_MSG("Read end marker " << marker << " (should be " << end_marker << ")");
         if (static_cast<uint32_t>(data.tellg()) != end_pos) {
-            std::string msg = (boost::format("Section end position is not %d, something's wrong") %
-                               end_pos).str();
-            throw std::runtime_error(msg);
+			std::ostringstream builder;
+			builder << "Section end position is not " << end_pos << ", something's wrong";
+            throw std::runtime_error(builder.str());
         }
     }
 

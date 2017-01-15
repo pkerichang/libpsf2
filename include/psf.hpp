@@ -13,8 +13,6 @@
 #include <memory>
 #include <stdexcept>
 
-#include <boost/variant.hpp>
-#include <boost/format.hpp>
 #include "H5Cpp.h"
 
 #include "psfproperty.hpp"
@@ -35,17 +33,17 @@ namespace psf {
     public:
         static constexpr uint32_t code = 16;
 
-        NonSweepValue();
-        NonSweepValue(uint32_t id, std::string name, uint32_t type_id,
-                      PSFScalar value, PropDict prop_dict);
-        
-        ~NonSweepValue();
+		NonSweepValue() {}
+		~NonSweepValue() {}
 
     private:
         uint32_t m_id;
         std::string m_name;
         uint32_t m_type_id;
-        PSFScalar m_value;
+		int8_t m_cval;
+		int32_t m_ival;
+		double m_dval;
+		std::string m_sval;
         PropDict m_prop_dict;
     };  
     

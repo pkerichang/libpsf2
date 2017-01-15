@@ -8,7 +8,6 @@
 #include <string>
 #include <algorithm>
 #include <fstream>
-#include <boost/asio.hpp>
 
 #define DEBUG 1
 
@@ -28,8 +27,11 @@ namespace psf {
     inline uint32_t read_uint32(std::ifstream& data) {
 		char buf[WORD_SIZE];
 		data.read(buf, WORD_SIZE);
-        uint32_t ans = ntohl(*(reinterpret_cast<uint32_t*>(buf)));
-        return ans;
+		// convert from BE to LE
+		return uint32_t((uint32_t(buf[0] & 255) << 24) |
+			(uint32_t(buf[1] & 255) << 16) |
+			(uint32_t(buf[2] & 255) << 8) |
+			(uint32_t(buf[3] & 255)));
     }
 
 	inline void undo_read_uint32(std::ifstream & data) {
@@ -47,23 +49,19 @@ namespace psf {
 		return static_cast<int8_t>(ans);
     }
 
-	inline uint64_t be64toh(uint64_t val) {
-		unsigned char* c = (unsigned char*)&val;
-		return uint64_t((uint64_t((c[0] & 255)) << 56) +
-						(uint64_t(c[1] & 255) << 48) +
-						(uint64_t(c[2] & 255) << 40) +
-						(uint64_t(c[3] & 255) << 32) +
-						(uint64_t(c[4] & 255) << 24) +
-						(uint64_t(c[5] & 255) << 16) +
-						(uint64_t(c[6] & 255) << 8) +
-						(uint64_t(c[7] & 255)));
-	}
-
     inline double read_double(std::ifstream & data) {
 		char buf[DOUB_SIZE];
 		data.read(buf, DOUB_SIZE);
-        uint64_t ans = be64toh(*(reinterpret_cast<uint64_t*>(buf)));
-        return *reinterpret_cast<double*>(&ans);
+		// convert from BE to LE
+		uint64_t val = uint64_t((uint64_t((buf[0] & 255)) << 56) +
+			(uint64_t(buf[1] & 255) << 48) +
+			(uint64_t(buf[2] & 255) << 40) +
+			(uint64_t(buf[3] & 255) << 32) +
+			(uint64_t(buf[4] & 255) << 24) +
+			(uint64_t(buf[5] & 255) << 16) +
+			(uint64_t(buf[6] & 255) << 8) +
+			(uint64_t(buf[7] & 255)));
+        return *reinterpret_cast<double*>(&val);
     }
     
     inline std::string read_str(std::ifstream & data) {

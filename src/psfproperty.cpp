@@ -2,30 +2,25 @@
 
 using namespace psf;
 
-Property::Property(std::string name, PropValue value) : std::pair<std::string, PropValue>(name, value) {}
 
 bool Property::read(std::ifstream & data) {
     uint32_t code = read_uint32(data);
     
-    PropValue val;
     switch(code) {
     case 33 :
-        first = read_str(data);
-        val = read_str(data);
-        second = val;
-        DEBUG_MSG("Read property (" << first << ", " << val << ")");
+        m_name = read_str(data);
+        m_sval = read_str(data);
+        DEBUG_MSG("Read property (" << m_name << ", " << m_sval << ")");
         return true;
     case 34 :
-        first = read_str(data);
-        val = read_int32(data);
-        second = val;
-        DEBUG_MSG("Read property (" << first << ", " << val << ")");
+        m_name = read_str(data);
+        m_ival = read_int32(data);
+        DEBUG_MSG("Read property (" << m_name << ", " << m_ival << ")");
         return true;
     case 35 :
-        first = read_str(data);
-        val = read_double(data);
-        second = val;
-        DEBUG_MSG("Read property (" << first << ", " << val << ")");
+        m_name = read_str(data);
+        m_dval = read_double(data);
+        DEBUG_MSG("Read property (" << m_name << ", " << m_dval << ")");
         return true;
     default :
 		undo_read_uint32(data);
@@ -40,7 +35,7 @@ bool PropDict::read(std::ifstream & data) {
         Property prop;
         valid = prop.read(data);
         if (valid) {
-            insert(prop);
+			emplace(prop.m_name, prop);
         }
     }
     return true;

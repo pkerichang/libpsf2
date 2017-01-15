@@ -11,17 +11,12 @@
 #include <map>
 #include <memory>
 #include <stdexcept>
-#include <boost/variant.hpp>
-#include <boost/format.hpp>
+#include "H5Cpp.h"
 
 #include "psfcommon.hpp"
 
+
 namespace psf {
-
-	
-
-	typedef boost::variant<int8_t, int32_t, double, std::complex<double>,
-		std::string> PSFScalar;
 
     // a class representing a data type definition.
     class TypeDef {
@@ -36,33 +31,21 @@ namespace psf {
 		static constexpr uint32_t TYPEID_STRUCT = 16;
 
         static constexpr uint32_t code = 16;
-        static constexpr uint32_t struct_code = 16;
         static constexpr uint32_t tuple_code = 18;
 
         TypeDef() {}
         ~TypeDef() {}
 
         bool read(std::ifstream & data, std::map<const uint32_t, TypeDef> * type_lookup);
-		
-		bool is_scalar_type() const {
-			switch (m_data_type) {
-			case TypeDef::TYPEID_INT8:
-			case TypeDef::TYPEID_INT32:
-			case TypeDef::TYPEID_DOUBLE:
-			case TypeDef::TYPEID_COMPLEXDOUBLE:
-				return true;
-			default:
-				return false;
-			}
-		}
-
-		PSFScalar read_scalar(std::ifstream & data) const;
 
         uint32_t m_id;
         std::string m_name;
+		std::string m_type_name;
         uint32_t m_array_type;
         uint32_t m_data_type;
-        std::vector<int> m_subtypes;
+		bool m_is_supported;
+		H5::DataType m_h5_read_type, m_h5_write_type;
+		hsize_t m_read_offset, m_read_stride;
         PropDict m_prop_dict;
     };
 

@@ -10,26 +10,25 @@
 #include <unordered_map>
 #include <memory>
 
-#include <boost/variant.hpp>
 #include "psfcommon.hpp"
 
 namespace psf {
-
-    typedef boost::variant<int32_t, double, std::string> PropValue;
     
     // A class that holds a key/value pair.
-    class Property : public std::pair<std::string, PropValue> {
+    class Property {
     public:
-        Property() {}
-        // not used, but provided for convenience.
-        Property(std::string name, PropValue value);
+        Property() : m_ival(0), m_dval(0.0), m_name(""), m_sval("") {}
         ~Property() {}
 
         bool read(std::ifstream & data);
+		int m_ival;
+		double m_dval;
+		std::string m_name;
+		std::string m_sval;
     };
 
     // container of properties as map for easy access.
-    class PropDict : public std::unordered_map<std::string, PropValue> {
+    class PropDict : public std::unordered_map<std::string, Property> {
     public:
         PropDict() {}
         ~PropDict() {}
