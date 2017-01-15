@@ -24,6 +24,9 @@ set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME     OFF)
 set(BOOST_ALL_DYN_LINK           ON) 
 
+add_definitions(-DH5_BUILT_AS_DYNAMIC_LIB)
+
+
 # list sources explicitly, so if we add/remove sources cmake 
 # knows to update makefiles.
 set(SOURCES 
@@ -44,15 +47,19 @@ set(CMAKE_CXX_STANDARD 11)
 # should be set to help cmake find BOOST location,
 # and BOOST_LIBRARYDIR should be added to PATH on windows
 # (LD_LIBRARY_PATH for linux) for the program to find the DLL.
-find_package(Boost 1.60.0 COMPONENTS system date_time REQUIRED)
+find_package(Boost 1.60.0 REQUIRED COMPONENTS system date_time)
+
+find_package(HDF5 REQUIRED COMPONENTS CXX)
 
 message(status "** Boost Include: ${Boost_INCLUDE_DIR}")
 message(status "** Boost Libraries: ${Boost_LIBRARY_DIRS}")
 message(status "** Boost Libraries: ${Boost_LIBRARIES}")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include ${Boost_INCLUDE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include 
+					${Boost_INCLUDE_DIR}
+					${HDF5_INCLUDE_DIRS})
 
-link_directories(${Boost_LIBRARY_DIRS})
+link_directories(${Boost_LIBRARY_DIRS} ${HDF5_LIBRARY_DIRS})
 
 add_library(psf SHARED ${SOURCES})
 
@@ -62,7 +69,7 @@ install(TARGETS psf RUNTIME DESTINATION ${PROJECT_BINARY_DIR}/bin)
 
 add_executable(testpsf test/test.cpp)
 
-target_link_libraries(testpsf psf ${Boost_LIBRARIES})
+target_link_libraries(testpsf psf ${Boost_LIBRARIES} ${HDF5_CXX_LIBRARIES})
 
 set_property(TARGET testpsf PROPERTY FOLDER "executables")
 
