@@ -19,8 +19,9 @@
 
 namespace psf {
 
-    static const uint32_t WORD_SIZE = sizeof(uint32_t);
-    
+    static constexpr uint32_t WORD_SIZE = sizeof(uint32_t);
+	static constexpr uint32_t BYTE_SIZE = sizeof(uint8_t);
+
     inline uint32_t read_uint32(char *& data) {
         uint32_t ans = ntohl(*(reinterpret_cast<uint32_t*>(data)));
         data += WORD_SIZE;
@@ -37,7 +38,9 @@ namespace psf {
     }
 
     inline int8_t read_int8(char *& data) {
-        return static_cast<int8_t>(read_uint32(data));
+		uint8_t ans = *(reinterpret_cast<uint8_t*>(data + WORD_SIZE - BYTE_SIZE));
+		data += WORD_SIZE;
+		return static_cast<int8_t>(ans);
     }
 
 	inline uint64_t be64toh(uint64_t val) {

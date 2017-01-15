@@ -34,29 +34,52 @@ namespace psf {
     
         DEBUG_MSG("Reading traces");
         auto trace_list = read_trace(data_pointer, mmap_data);
-    
+ 		
+		// check we have at least one sweep variable.
 		if (sweep_list->size() == 0) {
-			throw new std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
+			throw std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
 		}
 
+		// check that we have exactly one sweep variable.
 		if (sweep_list->size() > 1) {
-			throw new std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
+			throw std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
 		}
 
+		// check that this is a windowed sweep.
 		auto prop_iter = prop_dict->find("PSF window size");
 		if (prop_iter == prop_dict->end()) {
-			throw new std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
+			throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
 		}
 		uint32_t win_size = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
 
+		// check that sweep variable is a scalar type.
+		const TypeDef & swp_type = type_map->at((sweep_list->at(0)).m_type_id);
+		if (!swp_type.is_scalar_type()) {
+			throw std::runtime_error("Sweep variable is not a scalar type (char, int, double, or complex).");
+		}
+
+		// check that all output variables are scalar types.
+		uint32_t num_traces = trace_list->size();
+		auto trace_types = std::unique_ptr<std::vector<TypeDef>>(new std::vector<TypeDef>(num_traces));
+		for (auto output : *trace_list.get()) {
+			const TypeDef & output_type = type_map->at(output.m_type_id);
+			if (!output_type.is_scalar_type()) {
+				throw std::runtime_error((boost::format("Output variable %s is not a scalar type (char, int double, or complex).")
+					% output.m_name).str());
+			}
+			trace_types->push_back(output_type);
+		}
+
+		// check that number of sweep points is recorded.
 		prop_iter = prop_dict->find("PSF sweep points");
 		if (prop_iter == prop_dict->end()) {
-			throw new std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
+			throw std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
 		}
 		uint32_t num_points_data = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
 
         DEBUG_MSG("Reading valuess");
-        read_values_swp_window(data_pointer, mmap_data, num_points_data, win_size);
+        read_values_swp_window(data_pointer, mmap_data, num_points_data, win_size,
+			swp_type, trace_types.get());
     
     }
 
@@ -204,7 +227,9 @@ namespace psf {
 		return ans;
 	}
 
-	void read_values_swp_window(char *& data, const char * orig, uint32_t np_tot, uint32_t windowsize) {
+	void read_values_swp_window(char *& data, const char * orig, uint32_t num_points,
+		uint32_t windowsize, const TypeDef & swp_type,
+		std::vector<TypeDef> * trace_types) {
 
 		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
 
@@ -217,27 +242,32 @@ namespace psf {
 
 		uint32_t code = read_uint32(data);
 		if (code != SWP_WINDOW_SECTION_CODE) {
-			throw new std::runtime_error((boost::format("Expect code = %d, but got %d") % 
+			throw std::runtime_error((boost::format("Expect code = %d, but got %d") % 
 				SWP_WINDOW_SECTION_CODE % code).str());
 		}
 
 		uint32_t size_word = read_uint32(data);
-		uint32_t windows_left = size_word >> 16;
-		uint32_t num_points = size_word & 0xffff;
-		DEBUG_MSG("Number of points in window = " << windows_left);
-		DEBUG_MSG("Number of valid data in window = " << num_points);
+		uint32_t size_left = size_word >> 16;
+		uint32_t np_window = size_word & 0xffff;
+		DEBUG_MSG("Size word left value = " << size_left);
+		DEBUG_MSG("Number of valid data in window = " << np_window);
 		
-		DEBUG_MSG("Printing time");
-		for (uint32_t i = 0; i < num_points; i++) {
-			double vald = read_double(data);
-			DEBUG_MSG(boost::format("%.6g") % vald);
-		}
-		data += windowsize - 8 * num_points;
-		DEBUG_MSG("Printing data1");
-		for (uint32_t i = 0; i < num_points; i++) {
-			double vald = read_double(data);
-			DEBUG_MSG(boost::format("%.6g") % vald);
-		}
+		// currently assume we only have one sweep variable.
+		uint32_t points_read = 0;
+		//while (points_read < num_points) {
+			DEBUG_MSG("Printing sweep variable");
+			for (uint32_t i = 0; i < np_window; i++) {
+				double vald = read_double(data);
+				DEBUG_MSG(boost::format("%.6g") % vald);
+			}
+			data += windowsize - 8 * np_window;
+			DEBUG_MSG("Printing data1");
+			for (uint32_t i = 0; i < np_window; i++) {
+				double vald = read_double(data);
+				DEBUG_MSG(boost::format("%.6g") % vald);
+			}
+
+		//}
 	}
     
     /**
@@ -252,7 +282,7 @@ namespace psf {
         if (code != section_code) {
             std::string msg = (boost::format("Invalid section code %d, expected %d") % code %
                                section_code).str();
-            throw new std::runtime_error(msg);
+            throw std::runtime_error(msg);
         }
     
         uint32_t end_pos = read_uint32(data);
@@ -273,7 +303,7 @@ namespace psf {
         if ((data - orig) != end_pos) {
             std::string msg = (boost::format("Section end position is not %d, something's wrong") %
                                end_pos).str();
-            throw new std::runtime_error(msg);
+            throw std::runtime_error(msg);
         }
     }
 

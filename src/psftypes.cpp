@@ -33,8 +33,8 @@ std::vector<int> read_type_list(char *& data, std::map<const uint32_t, TypeDef> 
         TypeDef temp;
         valid_type = temp.read(data, type_lookup);
         if (valid_type) {
-            ans.push_back(temp.id());
-            type_lookup->emplace(temp.id(), temp);
+            ans.push_back(temp.m_id);
+            type_lookup->emplace(temp.m_id, temp);
         }
     }
     return ans;
@@ -94,6 +94,33 @@ bool TypeDef::read(char *& data, std::map<const uint32_t, TypeDef> * type_lookup
     m_prop_dict.read(data);
     type_lookup->emplace(m_id, *this);
     return true;
+}
+
+/**
+ * Reads a scalar of this type from the given binary data.
+ */
+PSFScalar TypeDef::read_scalar(char *& data) const {
+	PSFScalar ans;
+	double re, im;
+	switch (m_data_type) {
+	case TypeDef::TYPEID_INT8 :
+		ans = read_int8(data);
+		return ans;
+	case TypeDef::TYPEID_INT32 :
+		ans = read_int32(data);
+		return ans;
+	case TypeDef::TYPEID_DOUBLE :
+		ans = read_double(data);
+		return ans;
+	case TypeDef::TYPEID_COMPLEXDOUBLE :
+		re = read_double(data);
+		im = read_double(data);
+		ans = std::complex<double>(re, im);
+		return ans;
+	default :
+		// should never get here; we have checks before already.  Just return empty scalar. 
+		return ans;
+	}
 }
 
 /**
@@ -169,7 +196,7 @@ bool Group::read(char *& data) {
         } else {
             std::string msg = (boost::format("Group expects %d types, but only got %d") %
                                len % i).str();
-            throw new std::runtime_error(msg);
+            throw std::runtime_error(msg);
         }
     }
     

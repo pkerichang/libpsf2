@@ -24,22 +24,18 @@
 
 namespace psf {
 
-    static const uint32_t MAJOR_SECTION_CODE = 21;
-    static const uint32_t MINOR_SECTION_CODE = 22;
-	static const uint32_t SWP_WINDOW_SECTION_CODE = 16;
-    static const uint32_t HEADER_END = 1;
-    static const uint32_t TYPE_END = 2;
-    static const uint32_t SWEEP_END = 3;
-    static const uint32_t TRACE_END = 4;
-
-    typedef boost::variant<int8_t, int32_t, double, std::complex<double>, std::string> PSFScalar;
-    typedef std::vector<PSFScalar> PSFVector;
-    typedef std::unordered_map<std::string, std::unique_ptr<PSFVector>> VecDict;
+    static constexpr uint32_t MAJOR_SECTION_CODE = 21;
+    static constexpr uint32_t MINOR_SECTION_CODE = 22;
+	static constexpr uint32_t SWP_WINDOW_SECTION_CODE = 16;
+    static constexpr uint32_t HEADER_END = 1;
+    static constexpr uint32_t TYPE_END = 2;
+    static constexpr uint32_t SWEEP_END = 3;
+    static constexpr uint32_t TRACE_END = 4;
     
     // a value in a non-sweep simulation result.
     class NonSweepValue {
     public:
-        static const uint32_t code = 16;
+        static constexpr uint32_t code = 16;
 
         NonSweepValue();
         NonSweepValue(uint32_t id, std::string name, uint32_t type_id,
@@ -69,7 +65,9 @@ namespace psf {
     // really the same as read_type_section
     std::unique_ptr<VarList> read_trace(char *& data, const char * orig);
 
-    void read_values_swp_window(char *& data, const char * orig, uint32_t num_points, uint32_t windowsize);
+    void read_values_swp_window(char *& data, const char * orig, uint32_t num_points, 
+		uint32_t windowsize, const TypeDef & swp_type, 
+		std::vector<TypeDef> * trace_types);
     
 }
 
