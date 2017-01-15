@@ -7,74 +7,81 @@ namespace psf {
 	inline void read_section_end(std::ifstream & data, uint32_t end_pos, uint32_t end_marker);
 	inline void read_index(std::ifstream & data, bool is_trace);
 
-    void read_psf(std::string filename) {
-        // initialize members
-    
-        // create memory map file
+	void read_psf(std::string filename) {
+		// initialize members
+
+		// create memory map file
 		std::ifstream data(filename, std::ios::binary);
-    
-        // read first word and throw away
-        uint32_t first_word = read_uint32(data);
-        DEBUG_MSG("First word value = " << first_word);
-    
-        DEBUG_MSG("Reading header");
-        auto prop_dict = read_header(data);
-    
-        DEBUG_MSG("Reading types");
-        auto type_map = read_type(data);
-    
-        DEBUG_MSG("Reading sweeps");
-        auto sweep_list = read_sweep(data);
-    
-        DEBUG_MSG("Reading traces");
-        auto trace_list = read_trace(data);
- 		
-		// check we have at least one sweep variable.
-		if (sweep_list->size() == 0) {
-			throw std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
-		}
 
-		// check that we have exactly one sweep variable.
-		if (sweep_list->size() > 1) {
-			throw std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
-		}
+		try {
+			// read first word and throw away
+			uint32_t first_word = read_uint32(data);
+			DEBUG_MSG("First word value = " << first_word);
 
-		// check that this is a windowed sweep.
-		auto prop_iter = prop_dict->find("PSF window size");
-		if (prop_iter == prop_dict->end()) {
-			throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
-		}
-		uint32_t win_size = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
+			DEBUG_MSG("Reading header");
+			auto prop_dict = read_header(data);
 
-		// check that sweep variable is a scalar type.
-		const TypeDef & swp_type = type_map->at((sweep_list->at(0)).m_type_id);
-		if (!swp_type.is_scalar_type()) {
-			throw std::runtime_error("Sweep variable is not a scalar type (char, int, double, or complex).");
-		}
+			DEBUG_MSG("Reading types");
+			auto type_map = read_type(data);
 
-		// check that all output variables are scalar types.
-		size_t num_traces = trace_list->size();
-		auto trace_types = std::unique_ptr<std::vector<TypeDef>>(new std::vector<TypeDef>(num_traces));
-		for (auto output : *trace_list.get()) {
-			const TypeDef & output_type = type_map->at(output.m_type_id);
-			if (!output_type.is_scalar_type()) {
-				throw std::runtime_error((boost::format("Output variable %s is not a scalar type (char, int double, or complex).")
-					% output.m_name).str());
+			DEBUG_MSG("Reading sweeps");
+			auto sweep_list = read_sweep(data);
+
+			DEBUG_MSG("Reading traces");
+			auto trace_list = read_trace(data);
+
+			// check we have at least one sweep variable.
+			if (sweep_list->size() == 0) {
+				throw std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
 			}
-			trace_types->push_back(output_type);
+
+			// check that we have exactly one sweep variable.
+			if (sweep_list->size() > 1) {
+				throw std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
+			}
+
+			// check that this is a windowed sweep.
+			auto prop_iter = prop_dict->find("PSF window size");
+			if (prop_iter == prop_dict->end()) {
+				throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
+			}
+			uint32_t win_size = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
+
+			// check that sweep variable is a scalar type.
+			const TypeDef & swp_type = type_map->at((sweep_list->at(0)).m_type_id);
+			if (!swp_type.is_scalar_type()) {
+				throw std::runtime_error("Sweep variable is not a scalar type (char, int, double, or complex).");
+			}
+
+			// check that all output variables are scalar types.
+			size_t num_traces = trace_list->size();
+			auto trace_types = std::unique_ptr<std::vector<TypeDef>>(new std::vector<TypeDef>(num_traces));
+			for (auto output : *trace_list.get()) {
+				const TypeDef & output_type = type_map->at(output.m_type_id);
+				if (!output_type.is_scalar_type()) {
+					throw std::runtime_error((boost::format("Output variable %s is not a scalar type (char, int double, or complex).")
+						% output.m_name).str());
+				}
+				trace_types->push_back(output_type);
+			}
+
+			// check that number of sweep points is recorded.
+			prop_iter = prop_dict->find("PSF sweep points");
+			if (prop_iter == prop_dict->end()) {
+				throw std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
+			}
+			uint32_t num_points_data = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
+
+			DEBUG_MSG("Reading valuess");
+			read_values_swp_window(data, num_points_data, win_size,
+				swp_type, trace_types.get());
+		}
+		catch (std::exception & e) {
+			std::cout << "Exception caught: " << std::endl;
+			std::cout << e.what();
 		}
 
-		// check that number of sweep points is recorded.
-		prop_iter = prop_dict->find("PSF sweep points");
-		if (prop_iter == prop_dict->end()) {
-			throw std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
-		}
-		uint32_t num_points_data = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
-
-        DEBUG_MSG("Reading valuess");
-        read_values_swp_window(data, num_points_data, win_size,
-			swp_type, trace_types.get());
-    
+		data.close();
     }
 
 	/**
