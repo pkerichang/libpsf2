@@ -247,22 +247,28 @@ namespace psf {
 		DEBUG_MSG("Size word left value = " << size_left);
 		DEBUG_MSG("Number of valid data in window = " << np_window);
 		
+		std::string fname("test.hdf5"), xname("time"), yname("vout");
+		auto file = std::unique_ptr<H5::H5File>(new H5::H5File(fname.c_str(), H5F_ACC_TRUNC));
+
+		hsize_t dims[1] = { num_points };
+		H5::DataSpace dspace1(1, dims), dspace2(1, dims);
+		H5::DataSet time = file->createDataSet(xname.c_str(), H5::PredType::IEEE_F64LE, dspace1);
+		H5::DataSet vout = file->createDataSet(yname.c_str(), H5::PredType::IEEE_F64LE, dspace2);
+
 		// currently assume we only have one sweep variable.
 		uint32_t points_read = 0;
 		//while (points_read < num_points) {
-			DEBUG_MSG("Printing sweep variable");
-			for (uint32_t i = 0; i < np_window; i++) {
-				double vald = read_double(data);
-				DEBUG_MSG(boost::format("%.6g") % vald);
-			}
-			data.seekg(windowsize - 8 * np_window, std::ios::cur);
-
-			DEBUG_MSG("Printing data1");
-			for (uint32_t i = 0; i < np_window; i++) {
-				double vald = read_double(data);
-				DEBUG_MSG(boost::format("%.6g") % vald);
-			}
-
+		DEBUG_MSG("Printing sweep variable");
+		char * vec = new char[np_window * 8];
+		data.read(vec, np_window * 8);
+		time.write(vec, H5::PredType::IEEE_F64BE);
+		time.close();
+		data.seekg(windowsize - 8 * np_window, std::ios::cur);
+		data.read(vec, np_window * 8);
+		vout.write(vec, H5::PredType::IEEE_F64BE);
+		vout.close();
+		delete vec;
+		file->close();
 		//}
 	}
     

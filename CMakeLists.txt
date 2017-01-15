@@ -63,6 +63,8 @@ link_directories(${Boost_LIBRARY_DIRS} ${HDF5_LIBRARY_DIRS})
 
 add_library(psf SHARED ${SOURCES})
 
+target_link_libraries(psf ${Boost_LIBRARIES} ${HDF5_CXX_LIBRARIES})
+
 set_property(TARGET psf PROPERTY FOLDER "libraries")
 
 install(TARGETS psf RUNTIME DESTINATION ${PROJECT_BINARY_DIR}/bin)

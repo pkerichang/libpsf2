@@ -15,6 +15,7 @@
 
 #include <boost/variant.hpp>
 #include <boost/format.hpp>
+#include "H5Cpp.h"
 
 #include "psfproperty.hpp"
 #include "psftypes.hpp"

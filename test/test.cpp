@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     } else {
         std::cout << "No file specified, nothing to do." << std::endl;    
     }
-
+	/*
 	try {
 		const std::string file_name("example.hdf5");
 		const std::string dn1("foo");
@@ -64,6 +64,7 @@ int main(int argc, char *argv[]) {
 		std::cout << "Exception caught: " << std::endl;
 		std::cout << e.what() << std::endl;
 	}
+	*/
 	std::cout << "Press enter to continue";
 	std::cin.ignore();
 	return 1;
