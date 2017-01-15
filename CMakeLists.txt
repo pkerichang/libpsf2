@@ -73,7 +73,7 @@ target_link_libraries(psf
 
 set_property(TARGET psf PROPERTY FOLDER "libraries")
 
-install(TARGETS psf RUNTIME DESTINATION ${PROJECT_BINARY_DIR}/bin)
+install(TARGETS psf LIBRARY DESTINATION ${PROJECT_BINARY_DIR}/bin)
 
 add_executable(testpsf test/test.cpp)
 

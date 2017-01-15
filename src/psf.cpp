@@ -3,43 +3,46 @@
 
 namespace psf {
     
-	inline uint32_t read_section_preamble(std::ifstream & data, uint32_t section_code);
-	inline void read_section_end(std::ifstream & data, uint32_t end_pos, uint32_t end_marker);
-	inline void read_index(std::ifstream & data, bool is_trace);
-
-	void read_psf(std::string filename) {
-		// initialize members
-
-		// create memory map file
-		std::ifstream data(filename, std::ios::binary);
-
-		// read first word and throw away
-		uint32_t first_word = read_uint32(data);
-		DEBUG_MSG("First word value = " << first_word);
-
-		DEBUG_MSG("Reading header");
-		auto prop_dict = read_header(data);
-
-		DEBUG_MSG("Reading types");
-		auto type_map = read_type(data);
-
-		DEBUG_MSG("Reading sweeps");
-		auto sweep_list = read_sweep(data);
-
-		DEBUG_MSG("Reading traces");
-		auto trace_list = read_trace(data);
-
-		// check we have at least one sweep variable.
-		if (sweep_list->size() == 0) {
-			throw std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
-		}
-
-		// check that we have exactly one sweep variable.
-		if (sweep_list->size() > 1) {
-			throw std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
-		}
-
-		// check that this is a windowed sweep.
+    inline uint32_t read_section_preamble(std::ifstream & data, uint32_t section_code);
+    inline void read_section_end(std::ifstream & data, uint32_t end_pos, uint32_t end_marker);
+    inline void read_index(std::ifstream & data, bool is_trace);
+    
+    void read_psf(std::string filename) {
+        // initialize members
+        
+        // open file
+        std::ifstream data(filename, std::ios::binary);
+        if (!data.good()) {
+            throw std::runtime_error("Error opening file.");
+        }
+        
+        // read first word and throw away
+        uint32_t first_word = read_uint32(data);
+        DEBUG_MSG("First word value = " << first_word);
+        
+        DEBUG_MSG("Reading header");
+        auto prop_dict = read_header(data);
+        
+        DEBUG_MSG("Reading types");
+        auto type_map = read_type(data);
+        
+        DEBUG_MSG("Reading sweeps");
+        auto sweep_list = read_sweep(data);
+        
+        DEBUG_MSG("Reading traces");
+        auto trace_list = read_trace(data);
+        
+        // check we have at least one sweep variable.
+        if (sweep_list->size() == 0) {
+            throw std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
+        }
+        
+        // check that we have exactly one sweep variable.
+        if (sweep_list->size() > 1) {
+            throw std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
+        }
+        
+        // check that this is a windowed sweep.
 		auto prop_iter = prop_dict->find("PSF window size");
 		if (prop_iter == prop_dict->end()) {
 			throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
@@ -58,7 +61,6 @@ namespace psf {
 		}
 
 		// check that all output variables are scalar types.
-		size_t num_traces = trace_list->size();
 		for (auto output : *trace_list.get()) {
 			const TypeDef & output_type = type_map->at(output.m_type_id);
 			if (!output_type.m_is_supported) {
@@ -232,9 +234,9 @@ namespace psf {
 		uint32_t windowsize, const Variable & swp_var,
 		VarList * trace_list, TypeMap * type_map) {
 
-		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+		read_section_preamble(data, MAJOR_SECTION_CODE);
 
-		uint32_t zp_code = read_uint32(data);
+                uint32_t zp_code = read_uint32(data);
 		DEBUG_MSG("zero padding code = " << zp_code);
 
 		uint32_t zp_size = read_uint32(data);
@@ -325,7 +327,8 @@ namespace psf {
         }
     
         uint32_t end_pos = read_uint32(data);
-        DEBUG_MSG("section end position = " << end_pos);
+        DEBUG_MSG("section end position = " << end_pos <<
+                  ", current position = " << data.tellg());
 
         return end_pos;
     }

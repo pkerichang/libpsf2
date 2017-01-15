@@ -86,7 +86,7 @@ bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * typ
 	H5::CompType comp_read_type;
 	H5::CompType comp_write_type;
 	std::vector<int> subtypes;
-	hsize_t read_size = 0, write_size = 0;
+	size_t read_size = 0, write_size = 0;
 	std::ostringstream strbuilder;
 	m_read_offset = 0;
 	m_read_stride = 1;

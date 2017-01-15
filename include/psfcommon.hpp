@@ -5,6 +5,7 @@
  *  This header file define methods to read primitive types from binary file.
  */
 
+#include <cstring>
 #include <string>
 #include <algorithm>
 #include <fstream>
@@ -50,18 +51,21 @@ namespace psf {
     }
 
     inline double read_double(std::ifstream & data) {
-		char buf[DOUB_SIZE];
-		data.read(buf, DOUB_SIZE);
-		// convert from BE to LE
-		uint64_t val = uint64_t((uint64_t((buf[0] & 255)) << 56) +
-			(uint64_t(buf[1] & 255) << 48) +
-			(uint64_t(buf[2] & 255) << 40) +
-			(uint64_t(buf[3] & 255) << 32) +
-			(uint64_t(buf[4] & 255) << 24) +
-			(uint64_t(buf[5] & 255) << 16) +
-			(uint64_t(buf[6] & 255) << 8) +
-			(uint64_t(buf[7] & 255)));
-        return *reinterpret_cast<double*>(&val);
+        char buf[DOUB_SIZE];
+        data.read(buf, DOUB_SIZE);
+        // convert from BE to LE
+        uint64_t val = uint64_t((uint64_t((buf[0] & 255)) << 56) +
+                                (uint64_t(buf[1] & 255) << 48) +
+                                (uint64_t(buf[2] & 255) << 40) +
+                                (uint64_t(buf[3] & 255) << 32) +
+                                (uint64_t(buf[4] & 255) << 24) +
+                                (uint64_t(buf[5] & 255) << 16) +
+                                (uint64_t(buf[6] & 255) << 8) +
+                                (uint64_t(buf[7] & 255)));
+        double ans;
+        // ans = *reinterpret_cast<double*>(&val);
+        memcpy((void *)&ans, (void *)&val, sizeof(ans));
+        return ans;
     }
     
     inline std::string read_str(std::ifstream & data) {
