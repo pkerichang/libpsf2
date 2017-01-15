@@ -15,20 +15,19 @@ using namespace psf;
  * ...
  *
  */
-std::vector<int> read_type_list(char *& data, std::map<const uint32_t, TypeDef> * type_lookup) {
+std::vector<int> read_type_list(std::ifstream & data, std::map<const uint32_t, TypeDef> * type_lookup) {
 
     std::vector<int> ans;
     bool valid_type = true;
     while (valid_type) {
-        std::size_t num_read = 0;
-        uint32_t code = peek_uint32(data, num_read);
+        uint32_t code = read_uint32(data);
         if (code != TypeDef::tuple_code) {
             DEBUG_MSG("Read code = " << code << " != " <<
                       TypeDef::tuple_code << ", Stopping");
+			undo_read_uint32(data);
             return ans;                
         }
-        data += num_read;
-        
+
         DEBUG_MSG("Reading element of TypeDef Tuple");
         TypeDef temp;
         valid_type = temp.read(data, type_lookup);
@@ -66,15 +65,14 @@ std::vector<int> read_type_list(char *& data, std::map<const uint32_t, TypeDef> 
  * ...
  *
  */
-bool TypeDef::read(char *& data, std::map<const uint32_t, TypeDef> * type_lookup) {
-    std::size_t num_read = 0;
-    uint32_t code = peek_uint32(data, num_read);
+bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * type_lookup) {
+    uint32_t code = read_uint32(data);
     if (code != TypeDef::code) {
         DEBUG_MSG("Invalid TypeDef code " << code << ", expected " << TypeDef::code);
+		undo_read_uint32(data);
         return false;
     }
-    data += num_read;
-    
+
     m_id = read_uint32(data);
     m_name = read_str(data);
     m_array_type = read_uint32(data);
@@ -99,7 +97,7 @@ bool TypeDef::read(char *& data, std::map<const uint32_t, TypeDef> * type_lookup
 /**
  * Reads a scalar of this type from the given binary data.
  */
-PSFScalar TypeDef::read_scalar(char *& data) const {
+PSFScalar TypeDef::read_scalar(std::ifstream & data) const {
 	PSFScalar ans;
 	double re, im;
 	switch (m_data_type) {
@@ -136,15 +134,14 @@ PSFScalar TypeDef::read_scalar(char *& data) const {
  * ...
  *
  */
-bool Variable::read(char *& data) {
-    std::size_t num_read = 0;
-    uint32_t code = peek_uint32(data, num_read);
+bool Variable::read(std::ifstream & data) {
+    uint32_t code = read_uint32(data);
     if (code != Variable::code) {
         DEBUG_MSG("Invalid Variable code " << code << ", expected " << Variable::code);
+		undo_read_uint32(data);
         return false;
     }
-    data += num_read;
-    
+
     m_id = read_uint32(data);
     m_name = read_str(data);
     m_type_id = read_uint32(data);
@@ -171,14 +168,13 @@ bool Variable::read(char *& data) {
  * ...
  *
  */
-bool Group::read(char *& data) {
-    std::size_t num_read = 0;
-    uint32_t code = peek_uint32(data, num_read);
+bool Group::read(std::ifstream & data) {
+    uint32_t code = read_uint32(data);
     if (code != Group::code) {
         DEBUG_MSG("Invalid Group code " << code << ", expected " << Group::code);
+		undo_read_uint32(data);
         return false;
     }
-    data += num_read;
     
     m_id = read_uint32(data);
     m_name = read_str(data);

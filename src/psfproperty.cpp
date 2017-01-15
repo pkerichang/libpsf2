@@ -4,10 +4,8 @@ using namespace psf;
 
 Property::Property(std::string name, PropValue value) : std::pair<std::string, PropValue>(name, value) {}
 
-bool Property::read(char *& data) {
-    std::size_t num_read = 0;
-    uint32_t code = peek_uint32(data, num_read);
-    data += num_read;
+bool Property::read(std::ifstream & data) {
+    uint32_t code = read_uint32(data);
     
     PropValue val;
     switch(code) {
@@ -30,13 +28,13 @@ bool Property::read(char *& data) {
         DEBUG_MSG("Read property (" << first << ", " << val << ")");
         return true;
     default :
-        data -= num_read;
+		undo_read_uint32(data);
         DEBUG_MSG("Cannot parse property");
         return false;
     }
 }
 
-bool PropDict::read(char *& data) {
+bool PropDict::read(std::ifstream & data) {
     bool valid = true;
     while (valid) {
         Property prop;

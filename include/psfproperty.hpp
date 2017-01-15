@@ -25,7 +25,7 @@ namespace psf {
         Property(std::string name, PropValue value);
         ~Property() {}
 
-        bool read(char *& data);
+        bool read(std::ifstream & data);
     };
 
     // container of properties as map for easy access.
@@ -34,7 +34,7 @@ namespace psf {
         PropDict() {}
         ~PropDict() {}
         
-        bool read(char *& data);
+        bool read(std::ifstream & data);
     };
 
     typedef std::unordered_map<std::string, std::unique_ptr<PropDict>> NestPropDict;    

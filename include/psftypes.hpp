@@ -42,7 +42,7 @@ namespace psf {
         TypeDef() {}
         ~TypeDef() {}
 
-        bool read(char *& data, std::map<const uint32_t, TypeDef> * type_lookup);
+        bool read(std::ifstream & data, std::map<const uint32_t, TypeDef> * type_lookup);
 		
 		bool is_scalar_type() const {
 			switch (m_data_type) {
@@ -56,7 +56,7 @@ namespace psf {
 			}
 		}
 
-		PSFScalar read_scalar(char *& data) const;
+		PSFScalar read_scalar(std::ifstream & data) const;
 
         uint32_t m_id;
         std::string m_name;
@@ -76,7 +76,7 @@ namespace psf {
         Variable() {}
         ~Variable() {}
 
-        bool read(char *& data);
+        bool read(std::ifstream & data);
 
         uint32_t m_id;
         std::string m_name;
@@ -94,7 +94,7 @@ namespace psf {
         Group() {}
         ~Group() {}
         
-        bool read(char *& data);
+        bool read(std::ifstream & data);
 
         uint32_t m_id;
         std::string m_name;

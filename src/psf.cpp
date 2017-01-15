@@ -1,39 +1,33 @@
 #include "psf.hpp"
 
-namespace bip = boost::interprocess;
-
 
 namespace psf {
     
-	inline uint32_t read_section_preamble(char *& data, uint32_t section_code);
-	inline void read_section_end(char *& data, const char * orig, uint32_t end_pos, uint32_t end_marker);
-	inline void read_index(char *& data, bool is_trace);
+	inline uint32_t read_section_preamble(std::ifstream & data, uint32_t section_code);
+	inline void read_section_end(std::ifstream & data, uint32_t end_pos, uint32_t end_marker);
+	inline void read_index(std::ifstream & data, bool is_trace);
 
     void read_psf(std::string filename) {
         // initialize members
     
         // create memory map file
-        bip::file_mapping mapping(filename.c_str(), bip::read_only);
-        bip::mapped_region mapped_rgn(mapping, bip::read_only);
-        char* data_pointer = static_cast<char*>(mapped_rgn.get_address());
-        const char* mmap_data = data_pointer;
-        std::size_t const mmap_size = mapped_rgn.get_size();
+		std::ifstream data(filename, std::ios::binary);
     
         // read first word and throw away
-        uint32_t first_word = read_uint32(data_pointer);
+        uint32_t first_word = read_uint32(data);
         DEBUG_MSG("First word value = " << first_word);
     
         DEBUG_MSG("Reading header");
-        auto prop_dict = read_header(data_pointer, mmap_data);
+        auto prop_dict = read_header(data);
     
         DEBUG_MSG("Reading types");
-        auto type_map = read_type(data_pointer, mmap_data);
+        auto type_map = read_type(data);
     
         DEBUG_MSG("Reading sweeps");
-        auto sweep_list = read_sweep(data_pointer, mmap_data);
+        auto sweep_list = read_sweep(data);
     
         DEBUG_MSG("Reading traces");
-        auto trace_list = read_trace(data_pointer, mmap_data);
+        auto trace_list = read_trace(data);
  		
 		// check we have at least one sweep variable.
 		if (sweep_list->size() == 0) {
@@ -59,7 +53,7 @@ namespace psf {
 		}
 
 		// check that all output variables are scalar types.
-		uint32_t num_traces = trace_list->size();
+		size_t num_traces = trace_list->size();
 		auto trace_types = std::unique_ptr<std::vector<TypeDef>>(new std::vector<TypeDef>(num_traces));
 		for (auto output : *trace_list.get()) {
 			const TypeDef & output_type = type_map->at(output.m_type_id);
@@ -78,7 +72,7 @@ namespace psf {
 		uint32_t num_points_data = static_cast<uint32_t>(boost::get<int32_t>(prop_iter->second));
 
         DEBUG_MSG("Reading valuess");
-        read_values_swp_window(data_pointer, mmap_data, num_points_data, win_size,
+        read_values_swp_window(data, num_points_data, win_size,
 			swp_type, trace_types.get());
     
     }
@@ -92,14 +86,14 @@ namespace psf {
 	* PropEntry entry2
 	* ...
 	*/
-	std::unique_ptr<PropDict> read_header(char *& data, const char * orig) {
+	std::unique_ptr<PropDict> read_header(std::ifstream & data) {
 
 		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
 
 		auto ans = std::unique_ptr<PropDict>(new PropDict());
 		ans->read(data);
 
-		read_section_end(data, orig, end_pos, HEADER_END);
+		read_section_end(data, end_pos, HEADER_END);
 
 		return ans;
 	}
@@ -123,20 +117,20 @@ namespace psf {
 	* ...
 	* int end_marker = TYPE_END
 	*/
-	std::unique_ptr<TypeMap> read_type(char *& data, const char * orig) {
+	std::unique_ptr<TypeMap> read_type(std::ifstream & data) {
 
 		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
 		uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
 
 		auto ans = std::unique_ptr<TypeMap>(new TypeMap());
 		bool valid_type = true;
-		while (valid_type && (data - orig) < sub_end_pos) {
+		while (valid_type && static_cast<uint32_t>(data.tellg()) < sub_end_pos) {
 			TypeDef temp;
 			valid_type = temp.read(data, ans.get());
 		}
 
 		read_index(data, false);
-		read_section_end(data, orig, end_pos, TYPE_END);
+		read_section_end(data, end_pos, TYPE_END);
 
 		return ans;
 	}
@@ -150,7 +144,7 @@ namespace psf {
 	* Variable type2
 	* ...
 	*/
-	std::unique_ptr<VarList> read_sweep(char *& data, const char * orig) {
+	std::unique_ptr<VarList> read_sweep(std::ifstream & data) {
 
 		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
 
@@ -165,7 +159,7 @@ namespace psf {
 			}
 		}
 
-		read_section_end(data, orig, end_pos, SWEEP_END);
+		read_section_end(data, end_pos, SWEEP_END);
 
 		return ans;
 	}
@@ -193,7 +187,7 @@ namespace psf {
 	* ...
 	* int end_marker = TRACE_END
 	*/
-	std::unique_ptr<VarList> read_trace(char *& data, const char * orig) {
+	std::unique_ptr<VarList> read_trace(std::ifstream & data) {
 
 		uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
 		uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
@@ -204,7 +198,7 @@ namespace psf {
 		// going to flatten everything to Variables.
 		auto ans = std::unique_ptr<VarList>(new VarList());
 		bool valid_type = true;
-		while (valid_type && (data - orig) < sub_end_pos) {
+		while (valid_type && static_cast<uint32_t>(data.tellg()) < sub_end_pos) {
 			// try reading as Group
 			Group grp;
 			valid_type = grp.read(data);
@@ -222,12 +216,12 @@ namespace psf {
 		}
 
 		read_index(data, true);
-		read_section_end(data, orig, end_pos, TRACE_END);
+		read_section_end(data, end_pos, TRACE_END);
 
 		return ans;
 	}
 
-	void read_values_swp_window(char *& data, const char * orig, uint32_t num_points,
+	void read_values_swp_window(std::ifstream & data, uint32_t num_points,
 		uint32_t windowsize, const TypeDef & swp_type,
 		std::vector<TypeDef> * trace_types) {
 
@@ -238,7 +232,7 @@ namespace psf {
 
 		uint32_t zp_size = read_uint32(data);
 		DEBUG_MSG("zero padding size = " << zp_size << ", skipping");
-		data += zp_size;
+		data.seekg(zp_size, std::ios::cur);
 
 		uint32_t code = read_uint32(data);
 		if (code != SWP_WINDOW_SECTION_CODE) {
@@ -260,7 +254,8 @@ namespace psf {
 				double vald = read_double(data);
 				DEBUG_MSG(boost::format("%.6g") % vald);
 			}
-			data += windowsize - 8 * np_window;
+			data.seekg(windowsize - 8 * np_window, std::ios::cur);
+
 			DEBUG_MSG("Printing data1");
 			for (uint32_t i = 0; i < np_window; i++) {
 				double vald = read_double(data);
@@ -277,7 +272,7 @@ namespace psf {
      * int code = MAJOR_SECTION_CODE
      * int end_pos (end position of section).
      */
-    inline uint32_t read_section_preamble(char *& data, uint32_t section_code) {
+    inline uint32_t read_section_preamble(std::ifstream & data, uint32_t section_code) {
         uint32_t code = read_uint32(data);
         if (code != section_code) {
             std::string msg = (boost::format("Invalid section code %d, expected %d") % code %
@@ -297,10 +292,10 @@ namespace psf {
      * section end format:
      * int marker = end_marker.
      */
-    inline void read_section_end(char *& data, const char * orig, uint32_t end_pos, uint32_t end_marker) {
+    inline void read_section_end(std::ifstream & data, uint32_t end_pos, uint32_t end_marker) {
         uint32_t marker = read_uint32(data);
         DEBUG_MSG("Read end marker " << marker << " (should be " << end_marker << ")");
-        if ((data - orig) != end_pos) {
+        if (static_cast<uint32_t>(data.tellg()) != end_pos) {
             std::string msg = (boost::format("Section end position is not %d, something's wrong") %
                                end_pos).str();
             throw std::runtime_error(msg);
@@ -311,7 +306,7 @@ namespace psf {
      * Read the index section.
      *
      */
-    inline void read_index(char *& data, bool is_trace) {
+    inline void read_index(std::ifstream & data, bool is_trace) {
         uint32_t index_type = read_uint32(data);
         DEBUG_MSG("Type index type = " << index_type);
         uint32_t index_size = read_uint32(data);

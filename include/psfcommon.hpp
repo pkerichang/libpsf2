@@ -6,6 +6,8 @@
  */
 
 #include <string>
+#include <algorithm>
+#include <fstream>
 #include <boost/asio.hpp>
 
 #define DEBUG 1
@@ -19,27 +21,29 @@
 
 namespace psf {
 
-    static constexpr uint32_t WORD_SIZE = sizeof(uint32_t);
-	static constexpr uint32_t BYTE_SIZE = sizeof(uint8_t);
+	static constexpr int32_t DOUB_SIZE = sizeof(uint64_t);
+    static constexpr int32_t WORD_SIZE = sizeof(uint32_t);
+	static constexpr int32_t BYTE_SIZE = sizeof(uint8_t);
 
-    inline uint32_t read_uint32(char *& data) {
-        uint32_t ans = ntohl(*(reinterpret_cast<uint32_t*>(data)));
-        data += WORD_SIZE;
+    inline uint32_t read_uint32(std::ifstream& data) {
+		char buf[WORD_SIZE];
+		data.read(buf, WORD_SIZE);
+        uint32_t ans = ntohl(*(reinterpret_cast<uint32_t*>(buf)));
         return ans;
     }
-    
-    inline uint32_t peek_uint32(const char * data, std::size_t& num_read) {
-        num_read += WORD_SIZE;
-        return ntohl(*(reinterpret_cast<const uint32_t*>(data)));
-    }
 
-    inline int32_t read_int32(char *& data) {
+	inline void undo_read_uint32(std::ifstream & data) {
+		data.seekg(-WORD_SIZE, std::ios::cur);
+	}
+
+    inline int32_t read_int32(std::ifstream & data) {
         return static_cast<int32_t>(read_uint32(data));
     }
 
-    inline int8_t read_int8(char *& data) {
-		uint8_t ans = *(reinterpret_cast<uint8_t*>(data + WORD_SIZE - BYTE_SIZE));
-		data += WORD_SIZE;
+    inline int8_t read_int8(std::ifstream & data) {
+		char buf[WORD_SIZE];
+		data.read(buf, WORD_SIZE);
+		uint8_t ans = *(reinterpret_cast<uint8_t*>(buf + WORD_SIZE - BYTE_SIZE));
 		return static_cast<int8_t>(ans);
     }
 
@@ -55,17 +59,31 @@ namespace psf {
 						(uint64_t(c[7] & 255)));
 	}
 
-    inline double read_double(char *& data) {
-        uint64_t ans = be64toh(*(reinterpret_cast<uint64_t*>(data)));
-        data += sizeof(uint64_t);
+    inline double read_double(std::ifstream & data) {
+		char buf[DOUB_SIZE];
+		data.read(buf, DOUB_SIZE);
+        uint64_t ans = be64toh(*(reinterpret_cast<uint64_t*>(buf)));
         return *reinterpret_cast<double*>(&ans);
     }
     
-    inline std::string read_str(char *& data) {
+    inline std::string read_str(std::ifstream & data) {
         uint32_t len = read_int32(data);
-        std::string ans(data, len);
-        // align to word boundary (4 bytes)
-        data += (len + 3) & ~0x03;
+		// number of extra bytes to read to word-align the string length.
+		uint32_t extras = ((len + 3) & ~0x00000003) - len;
+		constexpr uint32_t buf_size = 100;
+		char buf[buf_size];
+		data.read(buf, std::min(len, buf_size));
+		uint32_t num_read = static_cast<uint32_t>(data.gcount());
+		std::string ans(buf, num_read);
+		len -= num_read;
+		while (len > 0) {
+			data.read(buf, std::min(len, buf_size));
+			num_read = static_cast<uint32_t>(data.gcount());
+			ans.append(buf, num_read);
+			len -= num_read;
+		}
+		// finish reading up to round len
+		data.read(buf, extras);
         return ans;
     }
     

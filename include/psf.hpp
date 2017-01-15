@@ -11,11 +11,8 @@
 #include <complex>
 #include <unordered_map>
 #include <memory>
-#include <fstream>
 #include <stdexcept>
 
-#include <boost/interprocess/file_mapping.hpp>
-#include <boost/interprocess/mapped_region.hpp>
 #include <boost/variant.hpp>
 #include <boost/format.hpp>
 
@@ -53,19 +50,19 @@ namespace psf {
     
 	void read_psf(std::string fname);
 
-    uint32_t read_section_preamble(char *&data);
+    uint32_t read_section_preamble(std::ifstream & data);
     
-    std::unique_ptr<PropDict> read_header(char *& data, const char * orig);
+    std::unique_ptr<PropDict> read_header(std::ifstream & data);
 
-    std::unique_ptr<TypeMap> read_type(char *& data, const char * orig);
+    std::unique_ptr<TypeMap> read_type(std::ifstream & data);
 
     // really the same as read_header
-    std::unique_ptr<VarList> read_sweep(char *& data, const char * orig);
+    std::unique_ptr<VarList> read_sweep(std::ifstream & data);
 
     // really the same as read_type_section
-    std::unique_ptr<VarList> read_trace(char *& data, const char * orig);
+    std::unique_ptr<VarList> read_trace(std::ifstream & data);
 
-    void read_values_swp_window(char *& data, const char * orig, uint32_t num_points, 
+    void read_values_swp_window(std::ifstream & data, uint32_t num_points,
 		uint32_t windowsize, const TypeDef & swp_type, 
 		std::vector<TypeDef> * trace_types);
     
