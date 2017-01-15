@@ -146,7 +146,7 @@ namespace psf {
         if (is_trace) {
             // read trace information
             uint32_t id, offset, extra1, extra2;
-            for(int i = 0; i < index_size; i += 4 * WORD_SIZE) {
+            for(uint32_t i = 0; i < index_size; i += 4 * WORD_SIZE) {
                 id = read_uint32(data);
                 offset = read_uint32(data);
                 extra1= read_uint32(data);
@@ -157,7 +157,7 @@ namespace psf {
         } else {
             // read index information
             uint32_t id, offset;
-            for(int i = 0; i < index_size; i += 2 * WORD_SIZE) {
+            for(uint32_t i = 0; i < index_size; i += 2 * WORD_SIZE) {
                 id = read_uint32(data);
                 offset = read_uint32(data);
                 DEBUG_MSG("index: (" << id << ", " << offset << ")");
@@ -321,13 +321,13 @@ namespace psf {
         DEBUG_MSG(boost::format("%d %x") % vali % vali);
         np = (vali >> 16) & 0xffff;
         DEBUG_MSG(boost::format("%d") % np);
-        for (int i = 0; i < np; i++) {
+        for (uint32_t i = 0; i < np; i++) {
             vald = read_double(data);
             DEBUG_MSG(boost::format("%.6g") % vald);
         }
         data += windowsize - 8 * np;
     
-        for (int i = 0; i < np; i++) {
+        for (uint32_t i = 0; i < np; i++) {
             vald = read_double(data);
             DEBUG_MSG(boost::format("%.6g") % vald);
         }

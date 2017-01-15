@@ -161,7 +161,7 @@ bool Group::read(char *& data) {
     
     DEBUG_MSG("Reading Variable list");
     bool valid = true;
-    for( int i = 0; i < len; i++) {
+    for(uint32_t i = 0; i < len; i++) {
         Variable temp;
         valid = temp.read(data);
         if (valid) {

@@ -39,7 +39,19 @@ namespace psf {
     inline int8_t read_int8(char *& data) {
         return static_cast<int8_t>(read_uint32(data));
     }
-    
+
+	inline uint64_t be64toh(uint64_t val) {
+		unsigned char* c = (unsigned char*)&val;
+		return uint64_t((uint64_t((c[0] & 255)) << 56) +
+						(uint64_t(c[1] & 255) << 48) +
+						(uint64_t(c[2] & 255) << 40) +
+						(uint64_t(c[3] & 255) << 32) +
+						(uint64_t(c[4] & 255) << 24) +
+						(uint64_t(c[5] & 255) << 16) +
+						(uint64_t(c[6] & 255) << 8) +
+						(uint64_t(c[7] & 255)));
+	}
+
     inline double read_double(char *& data) {
         uint64_t ans = be64toh(*(reinterpret_cast<uint64_t*>(data)));
         data += sizeof(uint64_t);
