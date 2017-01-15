@@ -13,7 +13,7 @@
 #include "psfcommon.hpp"
 
 namespace psf {
-    
+
     // A class that holds a key/value pair.
     class Property {
     public:
@@ -21,10 +21,10 @@ namespace psf {
         ~Property() {}
 
         bool read(std::ifstream & data);
-		int m_ival;
-		double m_dval;
-		std::string m_name;
-		std::string m_sval;
+        int m_ival;
+        double m_dval;
+        std::string m_name;
+        std::string m_sval;
     };
 
     // container of properties as map for easy access.
@@ -32,12 +32,12 @@ namespace psf {
     public:
         PropDict() {}
         ~PropDict() {}
-        
+
         bool read(std::ifstream & data);
     };
 
-    typedef std::unordered_map<std::string, std::unique_ptr<PropDict>> NestPropDict;    
+    typedef std::unordered_map<std::string, std::unique_ptr<PropDict>> NestPropDict;
 }
 
-    
+
 #endif
