@@ -5,7 +5,7 @@
  *  This header file define methods to read variable and type objects
  */
 
-#include <vector>
+#include <list>
 #include <complex>
 #include <string>
 #include <map>
@@ -67,7 +67,7 @@ namespace psf {
         PropDict m_prop_dict;
     };
 
-    typedef std::vector<Variable> VarList;
+    typedef std::list<Variable> VarList;
 
     // a collection of Variables.
     class Group {
