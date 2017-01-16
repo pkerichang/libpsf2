@@ -75,6 +75,9 @@ namespace psf {
             section_marker = read_uint32(data);
             LOG(TRACE) << "section marker = " << section_marker;
         }
+        else {
+            type_map = std::unique_ptr<TypeMap>(new TypeMap());
+        }
 
         std::unique_ptr<VarList> sweep_list;
         if (section_marker == SWEEP_START) {
@@ -85,6 +88,9 @@ namespace psf {
             // read next section marker.
             section_marker = read_uint32(data);
             LOG(TRACE) << "section marker = " << section_marker;
+        }
+        else {
+            sweep_list = std::unique_ptr<VarList>(new VarList());
         }
 
         std::unique_ptr<VarList> trace_list;
@@ -97,6 +103,9 @@ namespace psf {
             section_marker = read_uint32(data);
             LOG(TRACE) << "section marker = " << section_marker;
         }
+        else {
+            trace_list = std::unique_ptr<VarList>(new VarList());
+        }
 
         // make sure that we are reading value section next
         if (section_marker != VALUE_START) {
@@ -106,7 +115,7 @@ namespace psf {
         }
 
         // check we have at least one sweep variable.
-        if (sweep_list == nullptr || sweep_list->size() == 0) {
+        if (sweep_list->size() == 0) {
             LOG(TRACE) << "Reading values (No sweep)";
             read_values_no_swp(data, h5_file.get(), type_map.get());
         }
