@@ -23,6 +23,7 @@ namespace psf {
     static constexpr uint32_t MAJOR_SECTION_CODE = 21;
     static constexpr uint32_t MINOR_SECTION_CODE = 22;
     static constexpr uint32_t SWP_WINDOW_SECTION_CODE = 16;
+    static constexpr uint32_t NONSWP_VAL_SECTION_CODE = 16;
     static constexpr uint32_t TYPE_START = 1;
     static constexpr uint32_t SWEEP_START = 2;
     static constexpr uint32_t TRACE_START = 3;
@@ -58,6 +59,8 @@ namespace psf {
     std::unique_ptr<VarList> read_sweep(std::ifstream & data);
 
     std::unique_ptr<VarList> read_trace(std::ifstream & data);
+
+    void read_values_no_swp(std::ifstream & data, TypeMap * type_map);
 
     void read_values_swp_window(std::ifstream & data, uint32_t num_points,
         uint32_t windowsize, const Variable & swp_var,

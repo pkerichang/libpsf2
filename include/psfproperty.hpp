@@ -17,10 +17,13 @@ namespace psf {
     // A class that holds a key/value pair.
     class Property {
     public:
-        Property() : m_ival(0), m_dval(0.0), m_name(""), m_sval("") {}
+        enum type {INT, DOUBLE, STRING};
+
+        Property() : m_type(type::INT), m_ival(0), m_dval(0.0), m_name(""), m_sval("") {}
         ~Property() {}
 
         bool read(std::ifstream & data);
+        Property::type m_type;
         int m_ival;
         double m_dval;
         std::string m_name;

@@ -68,55 +68,59 @@ namespace psf {
 
         // check we have at least one sweep variable.
         if (sweep_list == nullptr || sweep_list->size() == 0) {
-            throw std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
+            read_values_no_swp(data, type_map.get());
         }
+        else {
 
-        // check that we have exactly one sweep variable.
-        if (sweep_list->size() > 1) {
-            throw std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
-        }
+            // check that we have exactly one sweep variable.
+            if (sweep_list->size() > 1) {
+                throw std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
+            }
 
-        // check that this is a windowed sweep.
-        auto prop_iter = prop_dict->find("PSF window size");
-        if (prop_iter == prop_dict->end()) {
-            throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
-        }
-        uint32_t win_size = prop_iter->second.m_ival;
+            // check that this is a windowed sweep.
+            auto prop_iter = prop_dict->find("PSF window size");
+            if (prop_iter == prop_dict->end()) {
+                throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
+            }
+            uint32_t win_size = prop_iter->second.m_ival;
 
-        // check that sweep variable is a scalar type.
-        const Variable & swp_var = sweep_list->at(0);
-        const TypeDef & swp_type = type_map->at(swp_var.m_type_id);
-        if (!swp_type.m_is_supported) {
-            std::ostringstream builder;
-            builder << "Sweep variable " << swp_var.m_name <<
-                " with type \"" << swp_type.m_name << "\" (data type = " <<
-                swp_type.m_type_name << " ) not supported.";
-            throw std::runtime_error(builder.str());
-        }
-
-        // check that all output variables are scalar types.
-        for (auto output : *trace_list.get()) {
-            const TypeDef & output_type = type_map->at(output.m_type_id);
-            if (!output_type.m_is_supported) {
+            // check that sweep variable is a scalar type.
+            const Variable & swp_var = sweep_list->at(0);
+            const TypeDef & swp_type = type_map->at(swp_var.m_type_id);
+            if (!swp_type.m_is_supported) {
                 std::ostringstream builder;
-                builder << "Output variable " << output.m_name <<
-                    " with type \"" << output_type.m_name << "\" (data type = " <<
-                    output_type.m_type_name << " ) not supported.";
+                builder << "Sweep variable " << swp_var.m_name <<
+                    " with type \"" << swp_type.m_name << "\" (data type = " <<
+                    swp_type.m_type_name << " ) not supported.";
                 throw std::runtime_error(builder.str());
             }
+
+            // check that all output variables are scalar types.
+            for (auto output : *trace_list.get()) {
+                const TypeDef & output_type = type_map->at(output.m_type_id);
+                if (!output_type.m_is_supported) {
+                    std::ostringstream builder;
+                    builder << "Output variable " << output.m_name <<
+                        " with type \"" << output_type.m_name << "\" (data type = " <<
+                        output_type.m_type_name << " ) not supported.";
+                    throw std::runtime_error(builder.str());
+                }
+            }
+
+            // check that number of sweep points is recorded.
+            prop_iter = prop_dict->find("PSF sweep points");
+            if (prop_iter == prop_dict->end()) {
+                throw std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
+            }
+            uint32_t num_points_data = prop_iter->second.m_ival;
+
+            DEBUG_MSG("Reading valuess");
+            read_values_swp_window(data, num_points_data, win_size,
+                swp_var, trace_list.get(), type_map.get());
+
         }
 
-        // check that number of sweep points is recorded.
-        prop_iter = prop_dict->find("PSF sweep points");
-        if (prop_iter == prop_dict->end()) {
-            throw std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
-        }
-        uint32_t num_points_data = prop_iter->second.m_ival;
-
-        DEBUG_MSG("Reading valuess");
-        read_values_swp_window(data, num_points_data, win_size,
-            swp_var, trace_list.get(), type_map.get());
-
+        DEBUG_MSG("Finished reading PSF file.");
         data.close();
     }
 
@@ -158,7 +162,6 @@ namespace psf {
     * int index_id2
     * int index_offset2
     * ...
-    * int end_marker = TYPE_END
     */
     std::unique_ptr<TypeMap> read_type(std::ifstream & data) {
 
@@ -228,7 +231,6 @@ namespace psf {
     * int extra2
     * int extra2
     * ...
-    * int end_marker = TRACE_END
     */
     std::unique_ptr<VarList> read_trace(std::ifstream & data) {
 
@@ -263,6 +265,108 @@ namespace psf {
         check_section_end(data, end_pos);
 
         return ans;
+    }
+
+    /**
+    * This functions reads the value section when no sweep is defined, and save
+    * results to HDF5 file.
+    *
+    * subsection{
+    * NonsweepValue val1
+    * NonsweepValue val2
+    * ...
+    * }
+    * int index_type
+    * int index_size
+    * int index_id1
+    * int index_offset1
+    * int index_id2
+    * int index_offset2
+    * ...
+    */
+    void read_values_no_swp(std::ifstream & data, TypeMap * type_map) {
+        uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
+        uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
+
+        // open HDF5 file.
+        std::string fname("test.hdf5");
+        hsize_t file_dim[1] = { 1 };
+        H5::DataSpace file_space(1, file_dim, file_dim);
+        H5::DataSpace buf_space(1, file_dim, file_dim);
+        auto file = std::unique_ptr<H5::H5File>(new H5::H5File(fname.c_str(), H5F_ACC_TRUNC));
+
+        bool valid = true;
+        while (valid && static_cast<uint32_t>(data.tellg()) < sub_end_pos) {
+            uint32_t code = read_uint32(data);
+            DEBUG_MSG("value code = " << code);
+            valid = (NONSWP_VAL_SECTION_CODE == code);
+            if (valid) {
+                uint32_t var_id = read_uint32(data);
+                DEBUG_MSG("Var id = " << var_id);
+                std::string var_name = read_str(data);
+                DEBUG_MSG("Var name = " << var_name);
+                uint32_t type_id = read_uint32(data);
+                DEBUG_MSG("Var type id = " << type_id);
+                const TypeDef & var_type = type_map->at(type_id);
+                DEBUG_MSG("Var type = " << var_type.m_name << ", " << var_type.m_type_name);
+
+                // create output dataset
+                auto dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+                    file->createDataSet(var_name.c_str(), var_type.m_h5_write_type, file_space)));
+
+                // read data into buffer
+                size_t data_size = var_type.m_h5_read_type.getSize();
+                auto buf = std::unique_ptr<char[]>(new char[data_size]);
+                data.read(buf.get(), data_size);
+
+                // write to dataset
+                dset->write(buf.get(), var_type.m_h5_read_type, buf_space, file_space);
+
+                // read properties
+                PropDict prop_dict;
+                prop_dict.read(data);
+
+                // write properties as attributes to dataset.
+                for (auto entry : prop_dict) {
+                    H5::DataSpace attr_space = H5::DataSpace(H5S_SCALAR);
+                    H5::Attribute attr;
+                    std::ostringstream builder;
+                    switch (entry.second.m_type) {
+                    case Property::type::INT:
+                        attr = dset->createAttribute(entry.second.m_name,
+                            H5::PredType::STD_I32LE, attr_space);
+                        attr.write(H5::PredType::STD_I32LE, &entry.second.m_ival);
+                        break;
+                    case Property::type::DOUBLE:
+                        attr = dset->createAttribute(entry.second.m_name,
+                            H5::PredType::IEEE_F64LE, attr_space);
+                        attr.write(H5::PredType::IEEE_F64LE, &entry.second.m_dval);
+                        break;
+                    case Property::type::STRING:
+                        attr = dset->createAttribute(entry.second.m_name,
+                            H5::PredType::C_S1, attr_space);
+                        attr.write(H5::PredType::C_S1, entry.second.m_sval.c_str());
+                        break;
+                    default:
+                        builder << "Unknown property type ID: " << entry.second.m_type;
+                        throw new std::runtime_error(builder.str());
+                    }
+
+                    // close attribute
+                    attr.close();
+                }
+
+                // close dataset
+                dset->close();
+            }
+        }
+
+        // close file
+        file->close();
+
+        // read rest of the variable section.
+        read_index(data, false);
+        check_section_end(data, end_pos);
     }
 
     void read_values_swp_window(std::ifstream & data, uint32_t num_points,
@@ -418,67 +522,45 @@ namespace psf {
     }
 
     /**
-     * This functions reads the value section when no sweep is defined, and returns the
-     * list of values
+     * NonesweepValue format:
+     * int code = nonsweep_value_code
+     * int id
+     * string name
+     * int type_id
+     * (char | int | double | string | complex | composite) value, depends on type_id
+     * PropEntry entry1
+     * PropEntry entry2
+     * ...
      *
-     * value (no sweep) section format:
-     * int code = major_section
-     * int end_pos (end position of section).
-     * int code = minor_section
-     * int end_pos (end position of sub-section).
-     * NonsweepValue val1
-     * NonsweepValue val2
-     * ...
-     * int index_type
-     * int index_size
-     * int index_id1
-     * int index_offset1
-     * int index_id2
-     * int index_offset2
-     * ...
-     * int end_marker = VALUE_END
      */
 
      /**
-      * NonesweepValue format:
-      * int code = nonsweep_value_code
-      * int id
-      * string name
-      * int type_id
-      * (char | int | double | string | complex | composite) value, depends on type_id
-      * PropEntry entry1
-      * PropEntry entry2
-      * ...
+      * This functions reads the value section when sweep is defined, and returns the
+      * list of values
       *
+      * value (sweep, windowed mode) section format 1:
+      * int code = major_section
+      * int end_pos (end position of section).
+      * ZeroPadding pad
+      * int end_pos (end position of sub-section).
+      * NonsweepValue val1
+      * NonsweepValue val2
+      * ...
+      * int index_type
+      * int index_size
+      * int index_id1
+      * int index_offset1
+      * int index_id2
+      * int index_offset2
+      * ...
+      * int end_marker = VALUE_END
       */
 
       /**
-       * This functions reads the value section when sweep is defined, and returns the
-       * list of values
-       *
-       * value (sweep, windowed mode) section format 1:
-       * int code = major_section
-       * int end_pos (end position of section).
-       * ZeroPadding pad
-       * int end_pos (end position of sub-section).
-       * NonsweepValue val1
-       * NonsweepValue val2
-       * ...
-       * int index_type
-       * int index_size
-       * int index_id1
-       * int index_offset1
-       * int index_id2
-       * int index_offset2
-       * ...
-       * int end_marker = VALUE_END
+       * ZeroPadding format:
+       * int code = zeropad_code (20)
+       * int size
+       * 0000000... (${size} number of 0 bytes).
        */
-
-       /**
-        * ZeroPadding format:
-        * int code = zeropad_code (20)
-        * int size
-        * 0000000... (${size} number of 0 bytes).
-        */
 
 }

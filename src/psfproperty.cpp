@@ -10,16 +10,19 @@ bool Property::read(std::ifstream & data) {
     case 33:
         m_name = read_str(data);
         m_sval = read_str(data);
+        m_type = type::STRING;
         DEBUG_MSG("Read property (" << m_name << ", " << m_sval << ")");
         return true;
     case 34:
         m_name = read_str(data);
         m_ival = read_int32(data);
+        m_type = type::INT;
         DEBUG_MSG("Read property (" << m_name << ", " << m_ival << ")");
         return true;
     case 35:
         m_name = read_str(data);
         m_dval = read_double(data);
+        m_type = type::DOUBLE;
         DEBUG_MSG("Read property (" << m_name << ", " << m_dval << ")");
         return true;
     default:
