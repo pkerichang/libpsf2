@@ -1,17 +1,13 @@
-Setup instructions on windws:
+Convert spectre Parameter Storage Format (PSF) simulation files to HDF5.
 
-0. install boost.
+This project is based and rewritten from:
 
-1. setup environment variables to help cmake find boost.  I set:
-   BOOST_ROOT = boost install directory = C:\local\boost_1_63_0
-   BOOST_LIBRARYDIR = boost library directory = C:\local\boost_1_63_0\lib64-msvc-14.0
-   
-   finally, add BOOST_ROOT to PATH variable so that executable can find boost dlls at runtime.
+https://github.com/henjo/libpsf
 
-2. clean build folder, and cd into it.
-   
-3. run:
+External dependencies are easyloggingpp (as a submodule) and HDF5 C++ API.
+This project is built with CMake so if you install HDF5 properly, CMake
+should be able to find it.  Note that as long as Anaconda python is in
+your path and HDF5/h5py is installed in your Anaconda distribution, CMake
+should be able to find HDF5 associated with that and no additional
+installation is required.
 
-   cmake .. -G "Visual Studio 14 2015 Win64"
-   
-   type cmake -h to see available options to -G flag.  I choose this one because I have Visual Studio 2015.
