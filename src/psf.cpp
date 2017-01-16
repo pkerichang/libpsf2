@@ -1,5 +1,6 @@
 #include "psf.hpp"
 
+INITIALIZE_EASYLOGGINGPP
 
 namespace psf {
 
@@ -7,55 +8,78 @@ namespace psf {
     inline void check_section_end(std::ifstream & data, uint32_t end_pos);
     inline void read_index(std::ifstream & data, bool is_trace);
 
-    void read_psf(std::string filename) {
-        // initialize members
+    void read_psf(const std::string& psf_filename, const std::string& hdf5_filename, bool print_msg) {
+        read_psf(psf_filename, hdf5_filename, "", print_msg);
+    }
+
+    void read_psf(const std::string& psf_filename, const std::string& hdf5_filename,
+        const std::string& log_filename, bool print_msg) {
+
+        // set logging message format
+        el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Format, "%level: %msg");
+        // set to print to stdout
+        std::string print_to_stdout = (print_msg) ? "true" : "false";
+        el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToStandardOutput, print_to_stdout);
+        // set log file.
+        if (log_filename == "") {
+            if (!print_msg) {
+                // just disable all logging
+                el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Enabled, "false");
+            }
+            el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "false");
+        } else {
+            el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "true");
+            el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, log_filename);
+        }
+
+        
 
         // open file
-        std::ifstream data(filename, std::ios::binary);
+        std::ifstream data(psf_filename, std::ios::binary);
         if (!data.good()) {
             throw std::runtime_error("Error opening file.");
         }
 
         // read first word and throw away
         uint32_t section_marker = read_uint32(data);
-        DEBUG_MSG("section marker = " << section_marker);
-        DEBUG_MSG("Reading header");
+        LOG(TRACE) << "section marker = " << section_marker;
+        LOG(TRACE) << "Reading header";
         auto prop_dict = read_header(data);
 
         section_marker = read_uint32(data);
-        DEBUG_MSG("section marker = " << section_marker);
+        LOG(TRACE) << "section marker = " << section_marker;
 
         std::unique_ptr<TypeMap> type_map;
         if (section_marker == TYPE_START) {
             // read section.
-            DEBUG_MSG("Reading types");
+            LOG(TRACE) << "Reading types";
             type_map = read_type(data);
 
             // read next section marker.
             section_marker = read_uint32(data);
-            DEBUG_MSG("section marker = " << section_marker);
+            LOG(TRACE) << "section marker = " << section_marker;
         }
 
         std::unique_ptr<VarList> sweep_list;
         if (section_marker == SWEEP_START) {
             // read section.
-            DEBUG_MSG("Reading sweeps");
+            LOG(TRACE) << "Reading sweeps";
             sweep_list = read_sweep(data);
 
             // read next section marker.
             section_marker = read_uint32(data);
-            DEBUG_MSG("section marker = " << section_marker);
+            LOG(TRACE) << "section marker = " << section_marker;
         }
 
         std::unique_ptr<VarList> trace_list;
         if (section_marker == TRACE_START) {
             // read section.
-            DEBUG_MSG("Reading traces");
+            LOG(TRACE) << "Reading traces";
             trace_list = read_trace(data);
 
             // read next section marker.
             section_marker = read_uint32(data);
-            DEBUG_MSG("section marker = " << section_marker);
+            LOG(TRACE) << "section marker = " << section_marker;
         }
 
         // make sure that we are reading value section next
@@ -64,7 +88,7 @@ namespace psf {
             builder << "Error: section marker is not equal to value section ID = " << VALUE_START;
             throw std::runtime_error(builder.str());
         }
-        DEBUG_MSG("Reading values");
+        LOG(TRACE) << "Reading values";
 
         // check we have at least one sweep variable.
         if (sweep_list == nullptr || sweep_list->size() == 0) {
@@ -114,13 +138,13 @@ namespace psf {
             }
             uint32_t num_points_data = prop_iter->second.m_ival;
 
-            DEBUG_MSG("Reading valuess");
+            LOG(TRACE) << "Reading valuess";
             read_values_swp_window(data, num_points_data, win_size,
                 swp_var, trace_list.get(), type_map.get());
 
         }
 
-        DEBUG_MSG("Finished reading PSF file.");
+        LOG(TRACE) << "Finished reading PSF file.";
         data.close();
     }
 
@@ -194,7 +218,7 @@ namespace psf {
 
         uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
 
-        DEBUG_MSG("Reading sweep types");
+        LOG(TRACE) << "Reading sweep types";
         auto ans = std::unique_ptr<VarList>(new VarList());
         bool valid_type = true;
         while (valid_type) {
@@ -298,17 +322,17 @@ namespace psf {
         bool valid = true;
         while (valid && static_cast<uint32_t>(data.tellg()) < sub_end_pos) {
             uint32_t code = read_uint32(data);
-            DEBUG_MSG("value code = " << code);
+            LOG(TRACE) << "value code = " << code;
             valid = (NONSWP_VAL_SECTION_CODE == code);
             if (valid) {
                 uint32_t var_id = read_uint32(data);
-                DEBUG_MSG("Var id = " << var_id);
+                LOG(TRACE) << "Var id = " << var_id;
                 std::string var_name = read_str(data);
-                DEBUG_MSG("Var name = " << var_name);
+                LOG(TRACE) << "Var name = " << var_name;
                 uint32_t type_id = read_uint32(data);
-                DEBUG_MSG("Var type id = " << type_id);
+                LOG(TRACE) << "Var type id = " << type_id;
                 const TypeDef & var_type = type_map->at(type_id);
-                DEBUG_MSG("Var type = " << var_type.m_name << ", " << var_type.m_type_name);
+                LOG(TRACE) << "Var type = " << var_type.m_name << ", " << var_type.m_type_name;
 
                 // create output dataset
                 auto dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(
@@ -376,10 +400,10 @@ namespace psf {
         read_section_preamble(data, MAJOR_SECTION_CODE);
 
         uint32_t zp_code = read_uint32(data);
-        DEBUG_MSG("zero padding code = " << zp_code);
+        LOG(TRACE) << "zero padding code = " << zp_code;
 
         uint32_t zp_size = read_uint32(data);
-        DEBUG_MSG("zero padding size = " << zp_size << ", skipping");
+        LOG(TRACE) << "zero padding size = " << zp_size << ", skipping";
         data.seekg(zp_size, std::ios::cur);
 
         uint32_t code = read_uint32(data);
@@ -393,8 +417,8 @@ namespace psf {
         uint32_t size_word = read_uint32(data);
         uint32_t size_left = size_word >> 16;
         uint32_t np_window = size_word & 0xffff;
-        DEBUG_MSG("Size word left value = " << size_left);
-        DEBUG_MSG("Number of valid data in window = " << np_window);
+        LOG(TRACE) << "Size word left value = " << size_left;
+        LOG(TRACE) << "Number of valid data in window = " << np_window;
 
         /*
         // open file
@@ -466,8 +490,8 @@ namespace psf {
         }
 
         uint32_t end_pos = read_uint32(data);
-        DEBUG_MSG("section end position = " << end_pos <<
-            ", current position = " << data.tellg());
+        LOG(TRACE) << "section end position = " << end_pos <<
+            ", current position = " << data.tellg();
 
         return end_pos;
     }
@@ -494,9 +518,9 @@ namespace psf {
      */
     inline void read_index(std::ifstream & data, bool is_trace) {
         uint32_t index_type = read_uint32(data);
-        DEBUG_MSG("Type index type = " << index_type);
+        LOG(TRACE) << "Type index type = " << index_type;
         uint32_t index_size = read_uint32(data);
-        DEBUG_MSG("Type index size = " << index_size);
+        LOG(TRACE) << "Type index size = " << index_size;
         if (is_trace) {
             // read trace information
             uint32_t id, offset, extra1, extra2;
@@ -505,8 +529,8 @@ namespace psf {
                 offset = read_uint32(data);
                 extra1 = read_uint32(data);
                 extra2 = read_uint32(data);
-                DEBUG_MSG("trace index: (" << id << ", " << offset <<
-                    ", " << extra1 << ", " << extra2 << ")");
+                LOG(TRACE) << "trace index: (" << id << ", " << offset <<
+                    ", " << extra1 << ", " << extra2 << ")";
             }
         }
         else {
@@ -515,7 +539,7 @@ namespace psf {
             for (uint32_t i = 0; i < index_size; i += 2 * WORD_SIZE) {
                 id = read_uint32(data);
                 offset = read_uint32(data);
-                DEBUG_MSG("index: (" << id << ", " << offset << ")");
+                LOG(TRACE) << "index: (" << id << ", " << offset << ")";
             }
         }
 

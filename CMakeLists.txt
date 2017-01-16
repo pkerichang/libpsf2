@@ -25,19 +25,22 @@ message(status "** CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 # set(BOOST_ALL_DYN_LINK           ON) 
 
 add_definitions(-DH5_BUILT_AS_DYNAMIC_LIB)
-
+add_definitions(-DELPP_NO_DEFAULT_LOG_FILE)
 
 # list sources explicitly, so if we add/remove sources cmake 
 # knows to update makefiles.
 set(SOURCES 
     ${CMAKE_CURRENT_SOURCE_DIR}/include/psf.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/psfcommon.hpp
-	${CMAKE_CURRENT_SOURCE_DIR}/include/psfproperty.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/psfproperty.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/include/psftypes.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/psf.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/psfproperty.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/psftypes.cpp
-	)
+    # easylogging
+    ${CMAKE_CURRENT_SOURCE_DIR}/easyloggingpp/src/easylogging++.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/easyloggingpp/src/easylogging++.h
+    )
 
 # enable C++11
 set(CMAKE_CXX_STANDARD 11)
@@ -56,20 +59,21 @@ find_package(HDF5 REQUIRED COMPONENTS CXX)
 # message(status "** Boost Libraries: ${Boost_LIBRARIES}")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include 
-					# ${Boost_INCLUDE_DIR}
-					${HDF5_INCLUDE_DIRS}
-					)
+		  # ${Boost_INCLUDE_DIR}
+		    ${HDF5_INCLUDE_DIRS}
+		    ${CMAKE_CURRENT_SOURCE_DIR}/easyloggingpp/src
+		    )
 
 link_directories(${HDF5_LIBRARY_DIRS}
-				 # ${Boost_LIBRARY_DIRS} 
-				 )
+	       # ${Boost_LIBRARY_DIRS} 
+	       	 )
 
 add_library(psf SHARED ${SOURCES})
 
 target_link_libraries(psf 
-					  ${HDF5_CXX_LIBRARIES}
-					  # ${Boost_LIBRARIES} 
-					  )
+		      ${HDF5_CXX_LIBRARIES}
+		    # ${Boost_LIBRARIES}
+		    )
 
 set_property(TARGET psf PROPERTY FOLDER "libraries")
 
@@ -77,10 +81,10 @@ install(TARGETS psf LIBRARY DESTINATION ${PROJECT_BINARY_DIR}/bin)
 
 add_executable(testpsf test/test.cpp)
 
-target_link_libraries(testpsf psf 
-					  ${HDF5_CXX_LIBRARIES}
-					  # ${Boost_LIBRARIES} 
-					  )
+target_link_libraries(testpsf psf
+	              ${HDF5_CXX_LIBRARIES}
+		      # ${Boost_LIBRARIES}
+		      )
 
 set_property(TARGET testpsf PROPERTY FOLDER "executables")
 

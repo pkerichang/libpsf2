@@ -22,13 +22,13 @@ std::vector<int> read_type_list(std::ifstream & data, std::map<const uint32_t, T
     while (valid_type) {
         uint32_t code = read_uint32(data);
         if (code != TypeDef::tuple_code) {
-            DEBUG_MSG("Read code = " << code << " != " <<
-                TypeDef::tuple_code << ", Stopping");
+            LOG(TRACE) << "Read code = " << code << " != " <<
+                TypeDef::tuple_code << ", Stopping";
             undo_read_uint32(data);
             return ans;
         }
 
-        DEBUG_MSG("Reading element of TypeDef Tuple");
+        LOG(TRACE) << "Reading element of TypeDef Tuple";
         TypeDef temp;
         valid_type = temp.read(data, type_lookup);
         if (valid_type) {
@@ -68,7 +68,7 @@ std::vector<int> read_type_list(std::ifstream & data, std::map<const uint32_t, T
 bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * type_lookup) {
     uint32_t code = read_uint32(data);
     if (code != TypeDef::code) {
-        DEBUG_MSG("Invalid TypeDef code " << code << ", expected " << TypeDef::code);
+        LOG(TRACE) << "Invalid TypeDef code " << code << ", expected " << TypeDef::code;
         undo_read_uint32(data);
         return false;
     }
@@ -78,8 +78,8 @@ bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * typ
     m_array_type = read_uint32(data);
     m_data_type = read_uint32(data);
 
-    DEBUG_MSG("TypeDef = (" << m_id << ", " << m_name <<
-        ", " << m_array_type << ", " << m_data_type << ")");
+    LOG(TRACE) << "TypeDef = (" << m_id << ", " << m_name <<
+        ", " << m_array_type << ", " << m_data_type << ")";
 
     m_is_supported = true;
     // construct HDF5 data type
@@ -170,7 +170,7 @@ bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * typ
     }
 
     // serialize properties
-    DEBUG_MSG("Reading TypeDef Properties");
+    LOG(TRACE) << "Reading TypeDef Properties";
     m_prop_dict.read(data);
     type_lookup->emplace(m_id, *this);
     return true;
@@ -192,7 +192,7 @@ bool TypeDef::read(std::ifstream & data, std::map<const uint32_t, TypeDef> * typ
 bool Variable::read(std::ifstream & data) {
     uint32_t code = read_uint32(data);
     if (code != Variable::code) {
-        DEBUG_MSG("Invalid Variable code " << code << ", expected " << Variable::code);
+        LOG(TRACE) << "Invalid Variable code " << code << ", expected " << Variable::code;
         undo_read_uint32(data);
         return false;
     }
@@ -201,10 +201,10 @@ bool Variable::read(std::ifstream & data) {
     m_name = read_str(data);
     m_type_id = read_uint32(data);
 
-    DEBUG_MSG("Variable = (" << m_id << ", " << m_name << ", " << m_type_id << ")");
+    LOG(TRACE) << "Variable = (" << m_id << ", " << m_name << ", " << m_type_id << ")";
 
     // serialize properties
-    DEBUG_MSG("Reading Variable Properties");
+    LOG(TRACE) << "Reading Variable Properties";
     m_prop_dict.read(data);
 
     return true;
@@ -226,7 +226,7 @@ bool Variable::read(std::ifstream & data) {
 bool Group::read(std::ifstream & data) {
     uint32_t code = read_uint32(data);
     if (code != Group::code) {
-        DEBUG_MSG("Invalid Group code " << code << ", expected " << Group::code);
+        LOG(TRACE) << "Invalid Group code " << code << ", expected " << Group::code;
         undo_read_uint32(data);
         return false;
     }
@@ -235,9 +235,9 @@ bool Group::read(std::ifstream & data) {
     m_name = read_str(data);
     uint32_t len = read_uint32(data);
 
-    DEBUG_MSG("Group = (" << m_id << ", " << m_name << ", " << len << ")");
+    LOG(TRACE) << "Group = (" << m_id << ", " << m_name << ", " << len << ")";
 
-    DEBUG_MSG("Reading Variable list");
+    LOG(TRACE) << "Reading Variable list";
     bool valid = true;
     for (uint32_t i = 0; i < len; i++) {
         Variable temp;

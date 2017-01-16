@@ -48,22 +48,26 @@ namespace psf {
         PropDict m_prop_dict;
     };
 
-    void read_psf(std::string fname);
+    void read_psf(const std::string& psf_filename, const std::string& hdf5_filename,
+        bool print_msg = false);
 
-    uint32_t read_section_preamble(std::ifstream & data);
+    void read_psf(const std::string& psf_filename, const std::string& hdf5_filename,
+        const std::string& log_filename, bool print_msg = false);
 
-    std::unique_ptr<PropDict> read_header(std::ifstream & data);
+    uint32_t read_section_preamble(std::ifstream& data);
 
-    std::unique_ptr<TypeMap> read_type(std::ifstream & data);
+    std::unique_ptr<PropDict> read_header(std::ifstream& data);
 
-    std::unique_ptr<VarList> read_sweep(std::ifstream & data);
+    std::unique_ptr<TypeMap> read_type(std::ifstream& data);
 
-    std::unique_ptr<VarList> read_trace(std::ifstream & data);
+    std::unique_ptr<VarList> read_sweep(std::ifstream& data);
+
+    std::unique_ptr<VarList> read_trace(std::ifstream& data);
 
     void read_values_no_swp(std::ifstream & data, TypeMap * type_map);
 
     void read_values_swp_window(std::ifstream & data, uint32_t num_points,
-        uint32_t windowsize, const Variable & swp_var,
+        uint32_t windowsize, const Variable& swp_var,
         VarList * trace_list, TypeMap * type_map);
 
 }

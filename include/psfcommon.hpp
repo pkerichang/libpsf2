@@ -9,15 +9,10 @@
 #include <string>
 #include <algorithm>
 #include <fstream>
-
-#define DEBUG 1
-
-#ifdef DEBUG
 #include <iostream>
-#define DEBUG_MSG(str) do { std::cout << str << std::endl; } while( false )
-#else
-#define DEBUG_MSG(str) do { } while ( false )
-#endif
+
+#include "easylogging++.h"
+
 
 namespace psf {
 
