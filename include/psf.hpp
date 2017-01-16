@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <memory>
 #include <stdexcept>
+#include <iomanip>
 
 #include "H5Cpp.h"
 

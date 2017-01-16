@@ -439,33 +439,39 @@ namespace psf {
         write_properties(swp_var.m_prop_dict, swp_dset.get());
 
         // create output datasets
-        H5::DataSet ** out_dsets = new H5::DataSet *[trace_list->size()];
+        auto out_dsets = std::vector<std::unique_ptr<H5::DataSet>>();
         for (size_t idx = 0; idx < trace_list->size(); idx++) {
             const Variable & out_var = trace_list->at(idx);
             LOG(TRACE) << "Create " << out_var.m_name << " dataset";
             const TypeDef & out_type = type_map->at(out_var.m_type_id);
-            auto out_dset = new H5::DataSet(file->createDataSet(out_var.m_name.c_str(), 
-                out_type.m_h5_write_type, file_space));
+            auto out_dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(out_var.m_name.c_str(), 
+                out_type.m_h5_write_type, file_space)));
             // write output properties to file.
             LOG(TRACE) << "Write " << out_var.m_name << " properties";
-            write_properties(out_var.m_prop_dict, out_dset);
-            out_dsets[idx] = out_dset;
+            write_properties(out_var.m_prop_dict, out_dset.get());
+            out_dsets.push_back(std::move(out_dset));
         }
 
         hsize_t mem_dim[1] = { np_window };
-        hsize_t count[1] = { np_window };
+        hsize_t file_count[1] = { np_window };
+        hsize_t mem_count[1] = { np_window };
         hsize_t file_offset[1] = { 0 };
         hsize_t zero_offset[1] = { 0 };
-        hsize_t file_stride[1] = { 1 };
+        hsize_t unit_step[1] = { 1 };
         H5::DataSpace mem_space(1, mem_dim, mem_dim);
 
         LOG(TRACE) << "Transferring data";
         uint32_t points_read = 0;
         auto buffer = std::unique_ptr<char[]>(new char[windowsize]);
         while (points_read < num_points) {
-            // include HDF5 file offset
+            // update HDF5 file offset
             file_offset[0] = points_read;
-            file_space.selectHyperslab(H5S_SELECT_SET, count, file_offset, file_stride, file_stride);
+            file_count[0] = std::min(np_window, num_points - points_read);
+            file_space.selectHyperslab(H5S_SELECT_SET, file_count, file_offset, unit_step, unit_step);
+            // update data count
+            mem_count[0] = file_count[0];
+            mem_space.selectHyperslab(H5S_SELECT_SET, mem_count, zero_offset, unit_step, unit_step);
+
             LOG(TRACE) << "Read sweep (" << swp_var.m_name << ") data to buffer";
             // write sweep values
             data.read(buffer.get(), windowsize);
@@ -476,23 +482,20 @@ namespace psf {
             for (size_t idx = 0; idx < trace_list->size(); idx++) {
                 const Variable & out_var = trace_list->at(idx);
                 const TypeDef & out_type = type_map->at(trace_list->at(idx).m_type_id);
-
                 LOG(TRACE) << "Read " << out_var.m_name << " data to buffer";
                 data.read(buffer.get(), windowsize);
                 LOG(TRACE) << "Transferring " << out_var.m_name << " data to file";
                 out_dsets[idx]->write(buffer.get(), out_type.m_h5_read_type, mem_space, file_space);
             }
             // update number of points read
-            points_read += np_window;
+            points_read += mem_count[0];
         }
 
         // close all datasets
         swp_dset->close();
         for (size_t idx = 0; idx < trace_list->size(); idx++) {
             out_dsets[idx]->close();
-            delete out_dsets[idx];
         }
-        delete out_dsets;
         
     }
 
@@ -545,22 +548,22 @@ namespace psf {
         LOG(TRACE) << "Type index size = " << index_size;
         if (is_trace) {
             // read trace information
-            uint32_t id, offset, extra1, extra2;
+            int32_t id, offset, extra1, extra2;
             for (uint32_t i = 0; i < index_size; i += 4 * WORD_SIZE) {
-                id = read_uint32(data);
-                offset = read_uint32(data);
-                extra1 = read_uint32(data);
-                extra2 = read_uint32(data);
-                LOG(TRACE) << "trace index: (" << id << ", " << offset <<
-                    ", " << extra1 << ", " << extra2 << ")";
+                id = read_int32(data);
+                offset = read_int32(data);
+                extra1 = read_int32(data);
+                extra2 = read_int32(data);
+                LOG(TRACE) << "trace index: (0x" << std::hex << std::setfill('0') << id << std::dec << 
+                    ", " << offset << ", " << extra1 << ", " << extra2 << ")";
             }
         }
         else {
             // read index information
-            uint32_t id, offset;
+            int32_t id, offset;
             for (uint32_t i = 0; i < index_size; i += 2 * WORD_SIZE) {
-                id = read_uint32(data);
-                offset = read_uint32(data);
+                id = read_int32(data);
+                offset = read_int32(data);
                 LOG(TRACE) << "index: (" << id << ", " << offset << ")";
             }
         }
