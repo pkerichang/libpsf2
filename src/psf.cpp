@@ -616,6 +616,8 @@ namespace psf {
             H5::DataSpace attr_space = H5::DataSpace(H5S_SCALAR);
             H5::Attribute attr;
             std::ostringstream builder;
+            H5::StrType stype;
+            size_t len;
             switch (entry.second.m_type) {
             case Property::type::INT:
                 attr = dset->createAttribute(entry.second.m_name,
@@ -628,9 +630,10 @@ namespace psf {
                 attr.write(H5::PredType::IEEE_F64LE, &entry.second.m_dval);
                 break;
             case Property::type::STRING:
-                attr = dset->createAttribute(entry.second.m_name,
-                    H5::PredType::C_S1, attr_space);
-                attr.write(H5::PredType::C_S1, entry.second.m_sval.c_str());
+                len = entry.second.m_sval.length();
+                stype = H5::StrType(H5::PredType::C_S1, len);
+                attr = dset->createAttribute(entry.second.m_name, stype, attr_space);
+                attr.write(stype, entry.second.m_sval.c_str());
                 break;
             default:
                 builder << "Unknown property type ID: " << entry.second.m_type;
