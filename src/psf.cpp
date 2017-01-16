@@ -32,13 +32,14 @@ namespace psf {
             el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, log_filename);
         }
 
-        
-
-        // open file
+        // open PSF file
         std::ifstream data(psf_filename, std::ios::binary);
         if (!data.good()) {
             throw std::runtime_error("Error opening file.");
         }
+
+        // open HDF5 file
+        auto h5_file = std::unique_ptr<H5::H5File>(new H5::H5File(hdf5_filename.c_str(), H5F_ACC_TRUNC));
 
         // read first word and throw away
         uint32_t section_marker = read_uint32(data);
@@ -92,7 +93,7 @@ namespace psf {
 
         // check we have at least one sweep variable.
         if (sweep_list == nullptr || sweep_list->size() == 0) {
-            read_values_no_swp(data, type_map.get());
+            read_values_no_swp(data, h5_file.get(), type_map.get());
         }
         else {
 
@@ -145,6 +146,7 @@ namespace psf {
         }
 
         LOG(TRACE) << "Finished reading PSF file.";
+        h5_file->close();
         data.close();
     }
 
@@ -308,7 +310,7 @@ namespace psf {
     * int index_offset2
     * ...
     */
-    void read_values_no_swp(std::ifstream & data, TypeMap * type_map) {
+    void read_values_no_swp(std::ifstream & data, H5::H5File * file, TypeMap * type_map) {
         uint32_t end_pos = read_section_preamble(data, MAJOR_SECTION_CODE);
         uint32_t sub_end_pos = read_section_preamble(data, MINOR_SECTION_CODE);
 
@@ -317,7 +319,6 @@ namespace psf {
         hsize_t file_dim[1] = { 1 };
         H5::DataSpace file_space(1, file_dim, file_dim);
         H5::DataSpace buf_space(1, file_dim, file_dim);
-        auto file = std::unique_ptr<H5::H5File>(new H5::H5File(fname.c_str(), H5F_ACC_TRUNC));
 
         bool valid = true;
         while (valid && static_cast<uint32_t>(data.tellg()) < sub_end_pos) {
@@ -384,9 +385,6 @@ namespace psf {
                 dset->close();
             }
         }
-
-        // close file
-        file->close();
 
         // read rest of the variable section.
         read_index(data, false);

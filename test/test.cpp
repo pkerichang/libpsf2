@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         std::string fname = argv[1];
         try {
-            psf::read_psf(fname, "", "", false);
+            psf::read_psf(fname, "test.hdf5", "output.log", true);
         }
         catch (std::exception & e) {
             std::cout << "Exception caught: " << std::endl;
