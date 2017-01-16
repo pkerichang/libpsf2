@@ -7,6 +7,7 @@ namespace psf {
     inline uint32_t read_section_preamble(std::ifstream & data, uint32_t section_code);
     inline void check_section_end(std::ifstream & data, uint32_t end_pos);
     inline void read_index(std::ifstream & data, bool is_trace);
+    void write_properties(const PropDict & prop_dict, H5::DataSet * dset);
 
     void read_psf(const std::string& psf_filename, const std::string& hdf5_filename, bool print_msg) {
         read_psf(psf_filename, hdf5_filename, "", print_msg);
@@ -27,7 +28,8 @@ namespace psf {
                 el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Enabled, "false");
             }
             el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "false");
-        } else {
+        }
+        else {
             el::Loggers::reconfigureAllLoggers(el::ConfigurationType::ToFile, "true");
             el::Loggers::reconfigureAllLoggers(el::ConfigurationType::Filename, log_filename);
         }
@@ -89,10 +91,10 @@ namespace psf {
             builder << "Error: section marker is not equal to value section ID = " << VALUE_START;
             throw std::runtime_error(builder.str());
         }
-        LOG(TRACE) << "Reading values";
 
         // check we have at least one sweep variable.
         if (sweep_list == nullptr || sweep_list->size() == 0) {
+            LOG(TRACE) << "Reading values (No sweep)";
             read_values_no_swp(data, h5_file.get(), type_map.get());
         }
         else {
@@ -102,47 +104,69 @@ namespace psf {
                 throw std::runtime_error("Non-single sweep PSF file is not supported.  If you use ADEXL for parametric sweep this shouldn't happen.");
             }
 
-            // check that this is a windowed sweep.
+            // get window size
+            uint32_t win_size;
             auto prop_iter = prop_dict->find("PSF window size");
             if (prop_iter == prop_dict->end()) {
-                throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
+                win_size = 0;
             }
-            uint32_t win_size = prop_iter->second.m_ival;
+            else {
+                win_size = prop_iter->second.m_ival;
+            }
 
-            // check that sweep variable is a scalar type.
+            // check that number of sweep points is recorded.
+            prop_iter = prop_dict->find("PSF sweep points");
+            if (prop_iter == prop_dict->end()) {
+                throw std::runtime_error("Cannot find PSF property \"PSF sweep points\".");
+            }
+            uint32_t num_points_data = prop_iter->second.m_ival;
+
+            // check that sweep variable type is supported
             const Variable & swp_var = sweep_list->at(0);
             const TypeDef & swp_type = type_map->at(swp_var.m_type_id);
             if (!swp_type.m_is_supported) {
                 std::ostringstream builder;
                 builder << "Sweep variable " << swp_var.m_name <<
                     " with type \"" << swp_type.m_name << "\" (data type = " <<
-                    swp_type.m_type_name << " ) not supported.";
+                    swp_type.m_type_name << " ) is not supported.";
                 throw std::runtime_error(builder.str());
             }
 
-            // check that all output variables are scalar types.
+            // check that all output variable types are supported and legal.
             for (auto output : *trace_list.get()) {
                 const TypeDef & output_type = type_map->at(output.m_type_id);
                 if (!output_type.m_is_supported) {
                     std::ostringstream builder;
                     builder << "Output variable " << output.m_name <<
                         " with type \"" << output_type.m_name << "\" (data type = " <<
-                        output_type.m_type_name << " ) not supported.";
+                        output_type.m_type_name << " ) is not supported.";
+                    throw std::runtime_error(builder.str());
+                }
+                if (win_size > 0 &&
+                    (swp_type.m_h5_read_type.getSize() != output_type.m_h5_read_type.getSize())) {
+                    // for windowed sweep, make sure sweep and all output variables
+                    // have the same data size.
+                    std::ostringstream builder;
+                    builder << "Output variable " << output.m_name <<
+                        " with type \"" << output_type.m_name << "\" (data type = " <<
+                        output_type.m_type_name << " ) has a data size different than" <<
+                        "sweep variable " << swp_var.m_name <<
+                        " with type \"" << swp_type.m_name << "\" (data type = " <<
+                        swp_type.m_type_name << " ).  This is not expected.  " <<
+                        "Please send your PSF File to developers for debugging.";
                     throw std::runtime_error(builder.str());
                 }
             }
 
-            // check that number of sweep points is recorded.
-            prop_iter = prop_dict->find("PSF sweep points");
-            if (prop_iter == prop_dict->end()) {
-                throw std::runtime_error("Cannot find property PSF \"PSF sweep points\".");
+            if (win_size == 0) {
+                // non-windowed sweep
+                throw std::runtime_error("Non-windowed sweep is not supported yet.  Contact developers.");
             }
-            uint32_t num_points_data = prop_iter->second.m_ival;
-
-            LOG(TRACE) << "Reading valuess";
-            read_values_swp_window(data, num_points_data, win_size,
-                swp_var, trace_list.get(), type_map.get());
-
+            else {
+                LOG(TRACE) << "Reading values (sweep windowed)";
+                read_values_swp_window(data, h5_file.get(), num_points_data, win_size,
+                    swp_var, trace_list.get(), type_map.get());
+            }
         }
 
         LOG(TRACE) << "Finished reading PSF file.";
@@ -335,6 +359,15 @@ namespace psf {
                 const TypeDef & var_type = type_map->at(type_id);
                 LOG(TRACE) << "Var type = " << var_type.m_name << ", " << var_type.m_type_name;
 
+                // check var_type is supported.
+                if (!var_type.m_is_supported) {
+                    std::ostringstream builder;
+                    builder << "Output variable " << var_name <<
+                        " with type \"" << var_type.m_name << "\" (data type = " <<
+                        var_type.m_type_name << " ) is not supported.";
+                    throw std::runtime_error(builder.str());
+                }
+
                 // create output dataset
                 auto dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(
                     file->createDataSet(var_name.c_str(), var_type.m_h5_write_type, file_space)));
@@ -351,35 +384,8 @@ namespace psf {
                 PropDict prop_dict;
                 prop_dict.read(data);
 
-                // write properties as attributes to dataset.
-                for (auto entry : prop_dict) {
-                    H5::DataSpace attr_space = H5::DataSpace(H5S_SCALAR);
-                    H5::Attribute attr;
-                    std::ostringstream builder;
-                    switch (entry.second.m_type) {
-                    case Property::type::INT:
-                        attr = dset->createAttribute(entry.second.m_name,
-                            H5::PredType::STD_I32LE, attr_space);
-                        attr.write(H5::PredType::STD_I32LE, &entry.second.m_ival);
-                        break;
-                    case Property::type::DOUBLE:
-                        attr = dset->createAttribute(entry.second.m_name,
-                            H5::PredType::IEEE_F64LE, attr_space);
-                        attr.write(H5::PredType::IEEE_F64LE, &entry.second.m_dval);
-                        break;
-                    case Property::type::STRING:
-                        attr = dset->createAttribute(entry.second.m_name,
-                            H5::PredType::C_S1, attr_space);
-                        attr.write(H5::PredType::C_S1, entry.second.m_sval.c_str());
-                        break;
-                    default:
-                        builder << "Unknown property type ID: " << entry.second.m_type;
-                        throw new std::runtime_error(builder.str());
-                    }
-
-                    // close attribute
-                    attr.close();
-                }
+                // write properties to file.
+                write_properties(prop_dict, dset.get());
 
                 // close dataset
                 dset->close();
@@ -391,9 +397,8 @@ namespace psf {
         check_section_end(data, end_pos);
     }
 
-    void read_values_swp_window(std::ifstream & data, uint32_t num_points,
-        uint32_t windowsize, const Variable & swp_var,
-        VarList * trace_list, TypeMap * type_map) {
+    void read_values_swp_window(std::ifstream & data, H5::H5File * file, uint32_t num_points,
+        uint32_t windowsize, const Variable & swp_var, VarList * trace_list, TypeMap * type_map) {
 
         read_section_preamble(data, MAJOR_SECTION_CODE);
 
@@ -418,58 +423,77 @@ namespace psf {
         LOG(TRACE) << "Size word left value = " << size_left;
         LOG(TRACE) << "Number of valid data in window = " << np_window;
 
-        /*
-        // open file
-        std::string fname("test.hdf5");
+        
         hsize_t file_dim[1] = { num_points };
         H5::DataSpace file_space(1, file_dim, file_dim);
-        auto file = std::unique_ptr<H5::H5File>(new H5::H5File(fname.c_str(), H5F_ACC_TRUNC));
 
+        LOG(TRACE) << "Create sweep (" << swp_var.m_name << ") dataset";
         // create sweep dataset
         const TypeDef & swp_type = type_map->at(swp_var.m_type_id);
         auto swp_dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(
             file->createDataSet(swp_var.m_name.c_str(), swp_type.m_h5_write_type, file_space)));
 
+        LOG(TRACE) << "Write sweep (" << swp_var.m_name << ") properties";
+
+        // write sweep properties to file.
+        write_properties(swp_var.m_prop_dict, swp_dset.get());
+
         // create output datasets
-        auto out_dsets = std::vector<std::unique_ptr<H5::DataSet>>(trace_list->size());
-        for (auto out_var : *trace_list) {
+        H5::DataSet ** out_dsets = new H5::DataSet *[trace_list->size()];
+        for (size_t idx = 0; idx < trace_list->size(); idx++) {
+            const Variable & out_var = trace_list->at(idx);
+            LOG(TRACE) << "Create " << out_var.m_name << " dataset";
             const TypeDef & out_type = type_map->at(out_var.m_type_id);
-            out_dsets.push_back(std::move(std::unique_ptr<H5::DataSet>(new H5::DataSet(
-                file->createDataSet(out_var.m_name.c_str(), out_type.m_h5_write_type, file_space)))));
+            auto out_dset = new H5::DataSet(file->createDataSet(out_var.m_name.c_str(), 
+                out_type.m_h5_write_type, file_space));
+            // write output properties to file.
+            LOG(TRACE) << "Write " << out_var.m_name << " properties";
+            write_properties(out_var.m_prop_dict, out_dset);
+            out_dsets[idx] = out_dset;
         }
 
         hsize_t mem_dim[1] = { np_window };
         hsize_t count[1] = { np_window };
         hsize_t file_offset[1] = { 0 };
+        hsize_t zero_offset[1] = { 0 };
         hsize_t file_stride[1] = { 1 };
         H5::DataSpace mem_space(1, mem_dim, mem_dim);
 
+        LOG(TRACE) << "Transferring data";
         uint32_t points_read = 0;
         auto buffer = std::unique_ptr<char[]>(new char[windowsize]);
         while (points_read < num_points) {
-            data.read(buffer.get(), windowsize);
-            // write sweep values
+            // include HDF5 file offset
             file_offset[0] = points_read;
             file_space.selectHyperslab(H5S_SELECT_SET, count, file_offset, file_stride, file_stride);
-            mem_space.selec
-            time.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
-            offset[0] = num_points;
-            file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
-            time.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
-            time.close();
-            data.seekg(windowsize - 8 * np_window, std::ios::cur);
-            data.read(vec, np_window * 8);
-            offset[0] = 0;
-            file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
-            vout.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
-            offset[0] = num_points;
-            file_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, stride);
-            vout.write(vec, H5::PredType::IEEE_F64BE, mem_space, file_space);
-            vout.close();
-            delete vec;
-            file->close();
+            LOG(TRACE) << "Read sweep (" << swp_var.m_name << ") data to buffer";
+            // write sweep values
+            data.read(buffer.get(), windowsize);
+            LOG(TRACE) << "Transferring sweep (" << swp_var.m_name << ") data to file";
+            swp_dset->write(buffer.get(), swp_type.m_h5_read_type, mem_space, file_space);
+
+            // write output values
+            for (size_t idx = 0; idx < trace_list->size(); idx++) {
+                const Variable & out_var = trace_list->at(idx);
+                const TypeDef & out_type = type_map->at(trace_list->at(idx).m_type_id);
+
+                LOG(TRACE) << "Read " << out_var.m_name << " data to buffer";
+                data.read(buffer.get(), windowsize);
+                LOG(TRACE) << "Transferring " << out_var.m_name << " data to file";
+                out_dsets[idx]->write(buffer.get(), out_type.m_h5_read_type, mem_space, file_space);
+            }
+            // update number of points read
+            points_read += np_window;
         }
-        */
+
+        // close all datasets
+        swp_dset->close();
+        for (size_t idx = 0; idx < trace_list->size(); idx++) {
+            out_dsets[idx]->close();
+            delete out_dsets[idx];
+        }
+        delete out_dsets;
+        
     }
 
     /**
@@ -541,6 +565,38 @@ namespace psf {
             }
         }
 
+    }
+
+    void write_properties(const PropDict & prop_dict, H5::DataSet * dset) {
+        // write properties as attributes to dataset.
+        for (auto entry : prop_dict) {
+            H5::DataSpace attr_space = H5::DataSpace(H5S_SCALAR);
+            H5::Attribute attr;
+            std::ostringstream builder;
+            switch (entry.second.m_type) {
+            case Property::type::INT:
+                attr = dset->createAttribute(entry.second.m_name,
+                    H5::PredType::STD_I32LE, attr_space);
+                attr.write(H5::PredType::STD_I32LE, &entry.second.m_ival);
+                break;
+            case Property::type::DOUBLE:
+                attr = dset->createAttribute(entry.second.m_name,
+                    H5::PredType::IEEE_F64LE, attr_space);
+                attr.write(H5::PredType::IEEE_F64LE, &entry.second.m_dval);
+                break;
+            case Property::type::STRING:
+                attr = dset->createAttribute(entry.second.m_name,
+                    H5::PredType::C_S1, attr_space);
+                attr.write(H5::PredType::C_S1, entry.second.m_sval.c_str());
+                break;
+            default:
+                builder << "Unknown property type ID: " << entry.second.m_type;
+                throw new std::runtime_error(builder.str());
+            }
+
+            // close attribute
+            attr.close();
+        }
     }
 
     /**

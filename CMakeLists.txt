@@ -26,6 +26,7 @@ message(status "** CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 add_definitions(-DH5_BUILT_AS_DYNAMIC_LIB)
 add_definitions(-DELPP_NO_DEFAULT_LOG_FILE)
+add_definitions(-Wno-unused-variable)
 
 # list sources explicitly, so if we add/remove sources cmake 
 # knows to update makefiles.

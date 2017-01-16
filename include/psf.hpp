@@ -66,9 +66,8 @@ namespace psf {
 
     void read_values_no_swp(std::ifstream & data, H5::H5File * file, TypeMap * type_map);
 
-    void read_values_swp_window(std::ifstream & data, uint32_t num_points,
-        uint32_t windowsize, const Variable& swp_var,
-        VarList * trace_list, TypeMap * type_map);
+    void read_values_swp_window(std::ifstream & data, H5::H5File * file, uint32_t num_points,
+        uint32_t windowsize, const Variable & swp_var, VarList * trace_list, TypeMap * type_map);
 
 }
 
