@@ -4,7 +4,7 @@
 namespace psf {
 
     inline uint32_t read_section_preamble(std::ifstream & data, uint32_t section_code);
-    inline void read_section_end(std::ifstream & data, uint32_t end_pos, uint32_t end_marker);
+    inline void check_section_end(std::ifstream & data, uint32_t end_pos);
     inline void read_index(std::ifstream & data, bool is_trace);
 
     void read_psf(std::string filename) {
@@ -17,23 +17,57 @@ namespace psf {
         }
 
         // read first word and throw away
-        uint32_t first_word = read_uint32(data);
-        DEBUG_MSG("First word value = " << first_word);
-
+        uint32_t section_marker = read_uint32(data);
+        DEBUG_MSG("section marker = " << section_marker);
         DEBUG_MSG("Reading header");
         auto prop_dict = read_header(data);
 
-        DEBUG_MSG("Reading types");
-        auto type_map = read_type(data);
+        section_marker = read_uint32(data);
+        DEBUG_MSG("section marker = " << section_marker);
 
-        DEBUG_MSG("Reading sweeps");
-        auto sweep_list = read_sweep(data);
+        std::unique_ptr<TypeMap> type_map;
+        if (section_marker == TYPE_START) {
+            // read section.
+            DEBUG_MSG("Reading types");
+            type_map = read_type(data);
 
-        DEBUG_MSG("Reading traces");
-        auto trace_list = read_trace(data);
+            // read next section marker.
+            section_marker = read_uint32(data);
+            DEBUG_MSG("section marker = " << section_marker);
+        }
+
+        std::unique_ptr<VarList> sweep_list;
+        if (section_marker == SWEEP_START) {
+            // read section.
+            DEBUG_MSG("Reading sweeps");
+            sweep_list = read_sweep(data);
+
+            // read next section marker.
+            section_marker = read_uint32(data);
+            DEBUG_MSG("section marker = " << section_marker);
+        }
+
+        std::unique_ptr<VarList> trace_list;
+        if (section_marker == TRACE_START) {
+            // read section.
+            DEBUG_MSG("Reading traces");
+            trace_list = read_trace(data);
+
+            // read next section marker.
+            section_marker = read_uint32(data);
+            DEBUG_MSG("section marker = " << section_marker);
+        }
+
+        // make sure that we are reading value section next
+        if (section_marker != VALUE_START) {
+            std::ostringstream builder;
+            builder << "Error: section marker is not equal to value section ID = " << VALUE_START;
+            throw std::runtime_error(builder.str());
+        }
+        DEBUG_MSG("Reading values");
 
         // check we have at least one sweep variable.
-        if (sweep_list->size() == 0) {
+        if (sweep_list == nullptr || sweep_list->size() == 0) {
             throw std::runtime_error("Non-sweep PSF file is not supported yet.  Contact developers.");
         }
 
@@ -102,7 +136,7 @@ namespace psf {
         auto ans = std::unique_ptr<PropDict>(new PropDict());
         ans->read(data);
 
-        read_section_end(data, end_pos, HEADER_END);
+        check_section_end(data, end_pos);
 
         return ans;
     }
@@ -139,7 +173,7 @@ namespace psf {
         }
 
         read_index(data, false);
-        read_section_end(data, end_pos, TYPE_END);
+        check_section_end(data, end_pos);
 
         return ans;
     }
@@ -168,7 +202,7 @@ namespace psf {
             }
         }
 
-        read_section_end(data, end_pos, SWEEP_END);
+        check_section_end(data, end_pos);
 
         return ans;
     }
@@ -226,7 +260,7 @@ namespace psf {
         }
 
         read_index(data, true);
-        read_section_end(data, end_pos, TRACE_END);
+        check_section_end(data, end_pos);
 
         return ans;
     }
@@ -340,12 +374,12 @@ namespace psf {
      * section end format:
      * int marker = end_marker.
      */
-    inline void read_section_end(std::ifstream & data, uint32_t end_pos, uint32_t end_marker) {
-        uint32_t marker = read_uint32(data);
-        DEBUG_MSG("Read end marker " << marker << " (should be " << end_marker << ")");
-        if (static_cast<uint32_t>(data.tellg()) != end_pos) {
+    inline void check_section_end(std::ifstream & data, uint32_t end_pos) {
+        uint32_t cur_pos = static_cast<uint32_t>(data.tellg()) + sizeof(uint32_t);
+        if (cur_pos != end_pos) {
             std::ostringstream builder;
-            builder << "Section end position is not " << end_pos << ", something's wrong";
+            builder << "Section end position = " << cur_pos <<
+                " is not " << end_pos << ", something's wrong";
             throw std::runtime_error(builder.str());
         }
     }
