@@ -9,10 +9,10 @@ namespace psf {
     std::unique_ptr<VarList> read_sweep(std::ifstream& data);
     std::unique_ptr<VarList> read_trace(std::ifstream& data);
     void read_values_no_swp(std::ifstream & data, H5::H5File * file, TypeMap * type_map);
-    void read_values_swp_window(std::ifstream & data, H5::H5File * file, uint32_t num_points,
-        uint32_t windowsize, VarList * trace_list, TypeMap * type_map);
-    void read_values_swp_simple(std::ifstream & data, H5::H5File * file, uint32_t num_points,
-        VarList * trace_list, TypeMap * type_map);
+    void read_values_swp_window(std::ifstream & data, H5::H5File * file, std::list<std::unique_ptr<H5::DataSet>> * dsets,
+        uint32_t num_points, uint32_t windowsize, std::list<TypeDef> * type_list, TypeMap * type_map);
+    void read_values_swp_simple(std::ifstream & data, H5::H5File * file, std::list<std::unique_ptr<H5::DataSet>> * dsets,
+        uint32_t num_points, uint32_t max_data_size, std::list<TypeDef> * type_list, TypeMap * type_map);
     inline uint32_t read_section_preamble(std::ifstream & data, uint32_t section_code);
     inline void check_section_end(std::ifstream & data, uint32_t end_pos);
     inline void read_index(std::ifstream & data, bool is_trace);
@@ -174,15 +174,40 @@ namespace psf {
             // append the only sweep variable to front of trace list
             trace_list->push_front(sweep_list->front());
 
+            // create output datasets
+            hsize_t file_dim[1] = { num_points_data };
+            size_t max_data_size = 0;
+            H5::DataSpace file_space(1, file_dim, file_dim);
+            auto out_types = std::unique_ptr<std::list<TypeDef>>(new std::list<TypeDef>());
+            auto out_dsets = std::unique_ptr<std::list<std::unique_ptr<H5::DataSet>>>(
+                new std::list<std::unique_ptr<H5::DataSet>>());
+            for (auto var : *trace_list) {
+                LOG(TRACE) << "Create " << var.m_name << " dataset";
+                const TypeDef & out_type = type_map->at(var.m_type_id);
+                max_data_size = std::max(max_data_size, out_type.m_h5_read_type.getSize());
+                auto out_dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(h5_file->createDataSet(var.m_name.c_str(),
+                    out_type.m_h5_write_type, file_space)));
+                // write output properties to file.
+                LOG(TRACE) << "Write " << var.m_name << " properties";
+                write_properties(var.m_prop_dict, out_dset.get());
+                out_dsets->push_back(std::move(out_dset));
+                out_types->push_back(out_type);
+            }
+
             if (win_size == 0) {
                 LOG(TRACE) << "Reading values (sweep simple)";
-                read_values_swp_simple(data, h5_file.get(), num_points_data,
-                    trace_list.get(), type_map.get());
+                read_values_swp_simple(data, h5_file.get(), out_dsets.get(), num_points_data,
+                    max_data_size, out_types.get(), type_map.get());
             }
             else {
                 LOG(TRACE) << "Reading values (sweep windowed)";
-                read_values_swp_window(data, h5_file.get(), num_points_data, win_size,
-                    trace_list.get(), type_map.get());
+                read_values_swp_window(data, h5_file.get(), out_dsets.get(), num_points_data,
+                    win_size, out_types.get(), type_map.get());
+            }
+
+            // close all datasets
+            for (auto itd = out_dsets->begin(); itd != out_dsets->end(); ++itd) {
+                (*itd)->close();
             }
         }
 
@@ -412,18 +437,19 @@ namespace psf {
         check_section_end(data, end_pos);
     }
 
-    void read_values_swp_window(std::ifstream & data, H5::H5File * file, uint32_t num_points,
-        uint32_t windowsize, VarList * trace_list, TypeMap * type_map) {
+    void read_values_swp_window(std::ifstream & data, H5::H5File * file, std::list<std::unique_ptr<H5::DataSet>> * dsets,
+        uint32_t num_points, uint32_t windowsize, std::list<TypeDef> * type_list, TypeMap * type_map) {
 
         read_section_preamble(data, MAJOR_SECTION_CODE);
 
+        // skip zero paddings
         uint32_t zp_code = read_uint32(data);
         LOG(TRACE) << "zero padding code = " << zp_code;
-
         uint32_t zp_size = read_uint32(data);
         LOG(TRACE) << "zero padding size = " << zp_size << ", skipping";
         data.seekg(zp_size, std::ios::cur);
 
+        // read window info
         uint32_t code = read_uint32(data);
         if (code != SWP_WINDOW_SECTION_CODE) {
             std::ostringstream builder;
@@ -431,29 +457,15 @@ namespace psf {
                 ", but got " << code;
             throw std::runtime_error(builder.str());
         }
-
         uint32_t size_word = read_uint32(data);
         uint32_t size_left = size_word >> 16;
         uint32_t np_window = size_word & 0xffff;
         LOG(TRACE) << "Size word left value = " << size_left;
         LOG(TRACE) << "Number of valid data in window = " << np_window;
 
-        
+        // setup HDF5 needed info
         hsize_t file_dim[1] = { num_points };
         H5::DataSpace file_space(1, file_dim, file_dim);
-
-        // create output datasets
-        auto out_dsets = std::list<std::unique_ptr<H5::DataSet>>();
-        for (auto var : *trace_list) {
-            LOG(TRACE) << "Create " << var.m_name << " dataset";
-            const TypeDef & out_type = type_map->at(var.m_type_id);
-            auto out_dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(var.m_name.c_str(), 
-                out_type.m_h5_write_type, file_space)));
-            // write output properties to file.
-            LOG(TRACE) << "Write " << var.m_name << " properties";
-            write_properties(var.m_prop_dict, out_dset.get());
-            out_dsets.push_back(std::move(out_dset));
-        }
 
         hsize_t mem_dim[1] = { np_window };
         hsize_t file_count[1] = { np_window };
@@ -463,6 +475,7 @@ namespace psf {
         hsize_t unit_step[1] = { 1 };
         H5::DataSpace mem_space(1, mem_dim, mem_dim);
 
+        // start data transfer
         LOG(TRACE) << "Transferring data";
         uint32_t points_read = 0;
         auto buffer = std::unique_ptr<char[]>(new char[windowsize]);
@@ -476,105 +489,54 @@ namespace psf {
             mem_space.selectHyperslab(H5S_SELECT_SET, mem_count, zero_offset, unit_step, unit_step);
 
             // write output values
-            auto itv = trace_list->begin();
-            auto itd = out_dsets.begin();
-            for (; itv != trace_list->end(); ++itv, ++itd) {
-                const Variable & out_var = *itv;
-                const TypeDef & out_type = type_map->at(out_var.m_type_id);
-                LOG(TRACE) << "Read " << out_var.m_name << " data to buffer";
+            auto itv = type_list->begin();
+            auto itd = dsets->begin();
+            for (; itv != type_list->end(); ++itv, ++itd) {
                 data.read(buffer.get(), windowsize);
-                LOG(TRACE) << "Transferring " << out_var.m_name << " data to file";
-                (*itd)->write(buffer.get(), out_type.m_h5_read_type, mem_space, file_space);
+                (*itd)->write(buffer.get(), (*itv).m_h5_read_type, mem_space, file_space);
             }
             // update number of points read
             points_read += mem_count[0];
-        }
-
-        // close all datasets
-        for (auto itd = out_dsets.begin(); itd != out_dsets.end(); ++itd) {
-            (*itd)->close();
         }
     }
 
-    void read_values_swp_simple(std::ifstream & data, H5::H5File * file, uint32_t num_points,
-        VarList * trace_list, TypeMap * type_map) {
+    void read_values_swp_simple(std::ifstream & data, H5::H5File * file, std::list<std::unique_ptr<H5::DataSet>> * dsets,
+        uint32_t num_points, uint32_t max_data_size, std::list<TypeDef> * type_list, TypeMap * type_map) {
 
         read_section_preamble(data, MAJOR_SECTION_CODE);
 
-        /*
+        // setup HDF5 needed info
         hsize_t file_dim[1] = { num_points };
         H5::DataSpace file_space(1, file_dim, file_dim);
 
-        LOG(TRACE) << "Create sweep (" << swp_var.m_name << ") dataset";
-        // create sweep dataset
-        const TypeDef & swp_type = type_map->at(swp_var.m_type_id);
-        auto swp_dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(
-            file->createDataSet(swp_var.m_name.c_str(), swp_type.m_h5_write_type, file_space)));
-
-        LOG(TRACE) << "Write sweep (" << swp_var.m_name << ") properties";
-
-        // write sweep properties to file.
-        write_properties(swp_var.m_prop_dict, swp_dset.get());
-
-        // create output datasets
-        auto out_dsets = std::vector<std::unique_ptr<H5::DataSet>>();
-        for (size_t idx = 0; idx < trace_list->size(); idx++) {
-            const Variable & out_var = trace_list->at(idx);
-            LOG(TRACE) << "Create " << out_var.m_name << " dataset";
-            const TypeDef & out_type = type_map->at(out_var.m_type_id);
-            auto out_dset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(out_var.m_name.c_str(),
-                out_type.m_h5_write_type, file_space)));
-            // write output properties to file.
-            LOG(TRACE) << "Write " << out_var.m_name << " properties";
-            write_properties(out_var.m_prop_dict, out_dset.get());
-            out_dsets.push_back(std::move(out_dset));
-        }
-
-        hsize_t mem_dim[1] = { np_window };
-        hsize_t file_count[1] = { np_window };
-        hsize_t mem_count[1] = { np_window };
+        hsize_t mem_dim[1] = { 1 };
+        hsize_t count[1] = { 1 };
         hsize_t file_offset[1] = { 0 };
-        hsize_t zero_offset[1] = { 0 };
         hsize_t unit_step[1] = { 1 };
         H5::DataSpace mem_space(1, mem_dim, mem_dim);
 
+        // start data transfer
         LOG(TRACE) << "Transferring data";
         uint32_t points_read = 0;
-        auto buffer = std::unique_ptr<char[]>(new char[windowsize]);
+        auto buffer = std::unique_ptr<char[]>(new char[max_data_size]);
         while (points_read < num_points) {
             // update HDF5 file offset
             file_offset[0] = points_read;
-            file_count[0] = std::min(np_window, num_points - points_read);
-            file_space.selectHyperslab(H5S_SELECT_SET, file_count, file_offset, unit_step, unit_step);
-            // update data count
-            mem_count[0] = file_count[0];
-            mem_space.selectHyperslab(H5S_SELECT_SET, mem_count, zero_offset, unit_step, unit_step);
-
-            LOG(TRACE) << "Read sweep (" << swp_var.m_name << ") data to buffer";
-            // write sweep values
-            data.read(buffer.get(), windowsize);
-            LOG(TRACE) << "Transferring sweep (" << swp_var.m_name << ") data to file";
-            swp_dset->write(buffer.get(), swp_type.m_h5_read_type, mem_space, file_space);
+            file_space.selectHyperslab(H5S_SELECT_SET, count, file_offset, unit_step, unit_step);
 
             // write output values
-            for (size_t idx = 0; idx < trace_list->size(); idx++) {
-                const Variable & out_var = trace_list->at(idx);
-                const TypeDef & out_type = type_map->at(trace_list->at(idx).m_type_id);
-                LOG(TRACE) << "Read " << out_var.m_name << " data to buffer";
-                data.read(buffer.get(), windowsize);
-                LOG(TRACE) << "Transferring " << out_var.m_name << " data to file";
-                out_dsets[idx]->write(buffer.get(), out_type.m_h5_read_type, mem_space, file_space);
+            auto itv = type_list->begin();
+            auto itd = dsets->begin();
+            for (; itv != type_list->end(); ++itv, ++itd) {
+                uint32_t code = read_uint32(data);
+                uint32_t var_id = read_uint32(data);
+                uint32_t cur_size = (*itv).m_h5_read_type.getSize();
+                data.read(buffer.get(), cur_size);
+                (*itd)->write(buffer.get(), (*itv).m_h5_read_type, mem_space, file_space);
             }
             // update number of points read
-            points_read += mem_count[0];
+            points_read += 1;
         }
-
-        // close all datasets
-        swp_dset->close();
-        for (size_t idx = 0; idx < trace_list->size(); idx++) {
-            out_dsets[idx]->close();
-        }
-        */
     }
 
     /**
@@ -632,7 +594,7 @@ namespace psf {
                 offset = read_int32(data);
                 extra1 = read_int32(data);
                 extra2 = read_int32(data);
-                LOG(TRACE) << "trace index: (0x" << std::hex << std::setfill('0') << id << std::dec << 
+                LOG(TRACE) << "trace index: (0x" << std::hex << std::setfill('0') << id << std::dec <<
                     ", " << offset << ", " << extra1 << ", " << extra2 << ")";
             }
         }
