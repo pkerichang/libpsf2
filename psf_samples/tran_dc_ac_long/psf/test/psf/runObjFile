@@ -1,0 +1,35 @@
+HEADER
+"PSFversion" "1.00"
+"Run Generator" "drlRun rev. 1.0"
+"Run Time Stamp" "Jan 16 08:12:59 2017"
+"date" "Jan 16 08:12:59 2017"
+"simulator" "spectre"
+"netlistDir" "../netlist"
+"axlParamFlag" "true"
+TYPE
+"runObject" STRUCT(
+"logName" ARRAY( * ) STRING *
+"parent" STRING *
+"sweepVariable" ARRAY( * ) STRING *
+) PROP( "key" "runObject" )
+VALUE
+"Root" "runObject" (
+("")
+""
+("vdc")
+)
+"vdc=0.5" "runObject" (
+(
+"../../../1/test/psf/logFile"
+"../../../1/test/psf/artistLogFile"
+)
+"Root"
+()
+) PROP(
+"Corner" "nom"
+"netlistDir" "../../../1/test/netlist"
+"dataDir" "../../../1/test"
+ "vdc" 5.000000e-01
+)
+
+END

@@ -1,0 +1,26 @@
+( ( nil
+  version "2.1"
+  mapType "incremental"
+  blockName "sampler_zin_pss"
+  repList "spectre cmos_sch cmos.sch schematic veriloga"
+  stopList "spectre"
+  globalList "gnd!"
+  hierDelim "."
+  netlistDir "/tools/scratch/erichang/simulation/adc_sampler_2/sampler_zin_pss/adexl/results/data/Interactive.7/1/pss/netlist"
+ )
+( instViewTable
+ )
+( net
+( "gnd!" "0" )
+ )
+( inst
+ )
+( model
+( "adc_sampler_2/sampler_zin_pss/schematic" "sampler_zin_pss" )
+ )
+( term
+ )
+( param
+ )
+( "sampler_zin_pss" "ihnl/cds0/map" )
+ )

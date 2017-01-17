@@ -1,0 +1,7 @@
+// Generated for: spectre
+// Generated on: Jan 11 08:05:12 2017
+// Design library name: adc_sampler_2
+// Design cell name: sampler_zin_pss
+// Design view name: schematic
+simulator lang=spectre
+global 0

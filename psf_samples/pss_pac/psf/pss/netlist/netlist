@@ -1,0 +1,37 @@
+
+// Library name: adc_sampler_2
+// Cell name: sampler_zin_pss
+// View name: schematic
+I11 (0 vin) isource type=dc pacmag=1 pacphase=iin_phase
+W0_1 (vin vout_1 vc_1 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_2 (vin vout_2 vc_2 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_3 (vin vout_3 vc_3 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_4 (vin vout_4 vc_4 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_5 (vin vout_5 vc_5 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_6 (vin vout_6 vc_6 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_7 (vin vout_7 vc_7 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_8 (vin vout_8 vc_8 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+C0_1 (vout_1 0) capacitor c=cl
+C0_2 (vout_2 0) capacitor c=cl
+C0_3 (vout_3 0) capacitor c=cl
+C0_4 (vout_4 0) capacitor c=cl
+C0_5 (vout_5 0) capacitor c=cl
+C0_6 (vout_6 0) capacitor c=cl
+C0_7 (vout_7 0) capacitor c=cl
+C0_8 (vout_8 0) capacitor c=cl
+V8 (vc_8 0) vsource type=pulse val0=0 val1=1 period=tper delay=7*tper/8 \
+        rise=tr fall=tr width=tper/8-tr
+V7 (vc_7 0) vsource type=pulse val0=0 val1=1 period=tper delay=3*tper/4 \
+        rise=tr fall=tr width=tper/8-tr
+V6 (vc_6 0) vsource type=pulse val0=0 val1=1 period=tper delay=5*tper/8 \
+        rise=tr fall=tr width=tper/8-tr
+V5 (vc_5 0) vsource type=pulse val0=0 val1=1 period=tper delay=tper/2 \
+        rise=tr fall=tr width=tper/8-tr
+V4 (vc_4 0) vsource type=pulse val0=0 val1=1 period=tper delay=3*tper/8 \
+        rise=tr fall=tr width=tper/8-tr
+V3 (vc_3 0) vsource type=pulse val0=0 val1=1 period=tper delay=tper/4 \
+        rise=tr fall=tr width=tper/8-tr
+V2 (vc_2 0) vsource type=pulse val0=0 val1=1 period=tper delay=tper/8 \
+        rise=tr fall=tr width=tper/8-tr
+V1 (vc_1 0) vsource type=pulse val0=0 val1=1 period=tper delay=0 rise=tr \
+        fall=tr width=tper/8-tr

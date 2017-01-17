@@ -1,0 +1,10 @@
+HEADER
+"PSFversion" "1.00"
+"design" "(\"adc_sampler_2\" \"tran_test\" \"schematic\" \"\")"
+"simulator" "spectre"
+"temperature" "27"
+"host" ""
+"date" "Jan 16 08:12:59 2017"
+"title" ""
+"analysisList" "()"
+END

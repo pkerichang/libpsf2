@@ -1,0 +1,356 @@
+HEADER
+"PSFversion" "1.00"
+"simulator" "spectre"
+"version" "15.1.0.644.isr13"
+"date" "8:05:04 AM, Wed Jan 11, 2017"
+"design" "// Generated for: spectre"
+"analysis type" "info.subckts"
+"analysis name" "subckts"
+"analysis description" "Circuit Information"
+"xVecSorted" "unknown"
+"tolerance.relative" 0.00100000
+TYPE
+"subckt" STRUCT(
+"subckt_params" STRING *
+"subckt_terminals" STRING *
+) PROP(
+"key" "sub"
+)
+VALUE
+"mimcap_sin" "subckt" (
+""
+""
+)
+"rhim" "subckt" (
+""
+""
+)
+"rm1l" "subckt" (
+""
+""
+)
+"rmxdl" "subckt" (
+""
+""
+)
+"rmxdw" "subckt" (
+""
+""
+)
+"rmxes" "subckt" (
+""
+""
+)
+"nmoscap" "subckt" (
+""
+""
+)
+"rm2s" "subckt" (
+""
+""
+)
+"ppode_lvt_mac" "subckt" (
+""
+""
+)
+"rm5s" "subckt" (
+""
+""
+)
+"cfmom_wo_p80" "subckt" (
+""
+""
+)
+"ndio_gated18_mac" "subckt" (
+""
+""
+)
+"pdio_18_mac" "subckt" (
+""
+""
+)
+"rm4l" "subckt" (
+""
+""
+)
+"ppode_18ud12_mac" "subckt" (
+""
+""
+)
+"rm9l" "subckt" (
+""
+""
+)
+"pnp2_mac" "subckt" (
+""
+""
+)
+"ndio_18_mac" "subckt" (
+""
+""
+)
+"rm8l" "subckt" (
+""
+""
+)
+"ndio_hia18_mac" "subckt" (
+""
+""
+)
+"rm5l" "subckt" (
+""
+""
+)
+"npode_18ud12_mac" "subckt" (
+""
+""
+)
+"pnp1d6_mac" "subckt" (
+""
+""
+)
+"rmzl" "subckt" (
+""
+""
+)
+"npode_18_mac" "subckt" (
+""
+""
+)
+"rmxal" "subckt" (
+""
+""
+)
+"pnp_i2_mac" "subckt" (
+""
+""
+)
+"rm1s" "subckt" (
+""
+""
+)
+"rm8w" "subckt" (
+""
+""
+)
+"rm2w" "subckt" (
+""
+""
+)
+"rm9w" "subckt" (
+""
+""
+)
+"npn_i2_mac" "subckt" (
+""
+""
+)
+"ppode_hvt_mac" "subckt" (
+""
+""
+)
+"rnwsti_m" "subckt" (
+""
+""
+)
+"rmzs" "subckt" (
+""
+""
+)
+"npn1d6_mac" "subckt" (
+""
+""
+)
+"rm2l" "subckt" (
+""
+""
+)
+"rmxaw" "subckt" (
+""
+""
+)
+"rmxas" "subckt" (
+""
+""
+)
+"npode_18ud15_mac" "subckt" (
+""
+""
+)
+"rm7s" "subckt" (
+""
+""
+)
+"pdio_gated18_mac" "subckt" (
+""
+""
+)
+"nmbscr_mac" "subckt" (
+""
+""
+)
+"rhim_m" "subckt" (
+""
+""
+)
+"rm9s" "subckt" (
+""
+""
+)
+"rmxds" "subckt" (
+""
+""
+)
+"nmoscap_18" "subckt" (
+""
+""
+)
+"rm7l" "subckt" (
+""
+""
+)
+"pnp_i1_mac" "subckt" (
+""
+""
+)
+"nfod_npwnw_mac" "subckt" (
+""
+""
+)
+"npode_ulvt_mac" "subckt" (
+""
+""
+)
+"ndio_mac" "subckt" (
+""
+""
+)
+"npn2_mac" "subckt" (
+""
+""
+)
+"npode_hvt_mac" "subckt" (
+""
+""
+)
+"ppode_svt_mac" "subckt" (
+""
+""
+)
+"npn_i1_mac" "subckt" (
+""
+""
+)
+"rnwsti" "subckt" (
+""
+""
+)
+"pdio_mac" "subckt" (
+""
+""
+)
+"pmbscr_mac" "subckt" (
+""
+""
+)
+"ppode_18ud15_mac" "subckt" (
+""
+""
+)
+"cfmom_mx_4t_p80" "subckt" (
+""
+""
+)
+"cfmom_wo_mx_p80" "subckt" (
+""
+""
+)
+"npode_lvt_mac" "subckt" (
+""
+""
+)
+"ppode_ulvt_mac" "subckt" (
+""
+""
+)
+"rm6w" "subckt" (
+""
+""
+)
+"ppode_18_mac" "subckt" (
+""
+""
+)
+"rmxew" "subckt" (
+""
+""
+)
+"rm3w" "subckt" (
+""
+""
+)
+"rmxel" "subckt" (
+""
+""
+)
+"rm6l" "subckt" (
+""
+""
+)
+"npode_svt_mac" "subckt" (
+""
+""
+)
+"pdio_hia18_mac" "subckt" (
+""
+""
+)
+"rmap" "subckt" (
+""
+""
+)
+"rm4w" "subckt" (
+""
+""
+)
+"rm1w" "subckt" (
+""
+""
+)
+"rm3l" "subckt" (
+""
+""
+)
+"rm5w" "subckt" (
+""
+""
+)
+"rm4s" "subckt" (
+""
+""
+)
+"cfmom_2t_p80" "subckt" (
+""
+""
+)
+"rm6s" "subckt" (
+""
+""
+)
+"rm7w" "subckt" (
+""
+""
+)
+"rm8s" "subckt" (
+""
+""
+)
+"rmzw" "subckt" (
+""
+""
+)
+"rm3s" "subckt" (
+""
+""
+)
+END

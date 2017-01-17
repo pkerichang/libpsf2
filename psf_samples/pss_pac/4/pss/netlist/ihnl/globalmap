@@ -1,0 +1,15 @@
+CADENCE IHNL01070
+$model
+adc_sampler_2/sampler_zin_pss/schematic sampler_zin_pss
+$endmodel
+$net
+gnd! 0
+$endnet
+$param
+tper tper
+_EXPR_1 _EXPR_1
+iin_phase iin_phase
+ron ron
+cl cl
+tr tr
+$endparam

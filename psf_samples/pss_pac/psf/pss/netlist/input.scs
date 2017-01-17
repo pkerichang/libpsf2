@@ -1,0 +1,61 @@
+// Generated for: spectre
+// Generated on: Jan 11 08:05:02 2017
+// Design library name: adc_sampler_2
+// Design cell name: sampler_zin_pss
+// Design view name: schematic
+simulator lang=spectre
+global 0
+parameters _EXPR_1=1.6e-09 cl=64f iin_phase=0 ron=80 tper=800p tr=1p
+include "/tools/tstech16/CLN16FFC/PDK/tsmcN16/../models/toplevel.scs" section=top_tt
+
+// Library name: adc_sampler_2
+// Cell name: sampler_zin_pss
+// View name: schematic
+I11 (0 vin) isource type=dc pacmag=1 pacphase=iin_phase
+W0_1 (vin vout_1 vc_1 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_2 (vin vout_2 vc_2 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_3 (vin vout_3 vc_3 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_4 (vin vout_4 vc_4 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_5 (vin vout_5 vc_5 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_6 (vin vout_6 vc_6 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_7 (vin vout_7 vc_7 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+W0_8 (vin vout_8 vc_8 0) relay vt1=490.0m vt2=510.0m ropen=1T rclosed=ron
+C0_1 (vout_1 0) capacitor c=cl
+C0_2 (vout_2 0) capacitor c=cl
+C0_3 (vout_3 0) capacitor c=cl
+C0_4 (vout_4 0) capacitor c=cl
+C0_5 (vout_5 0) capacitor c=cl
+C0_6 (vout_6 0) capacitor c=cl
+C0_7 (vout_7 0) capacitor c=cl
+C0_8 (vout_8 0) capacitor c=cl
+V8 (vc_8 0) vsource type=pulse val0=0 val1=1 period=tper delay=7*tper/8 \
+        rise=tr fall=tr width=tper/8-tr
+V7 (vc_7 0) vsource type=pulse val0=0 val1=1 period=tper delay=3*tper/4 \
+        rise=tr fall=tr width=tper/8-tr
+V6 (vc_6 0) vsource type=pulse val0=0 val1=1 period=tper delay=5*tper/8 \
+        rise=tr fall=tr width=tper/8-tr
+V5 (vc_5 0) vsource type=pulse val0=0 val1=1 period=tper delay=tper/2 \
+        rise=tr fall=tr width=tper/8-tr
+V4 (vc_4 0) vsource type=pulse val0=0 val1=1 period=tper delay=3*tper/8 \
+        rise=tr fall=tr width=tper/8-tr
+V3 (vc_3 0) vsource type=pulse val0=0 val1=1 period=tper delay=tper/4 \
+        rise=tr fall=tr width=tper/8-tr
+V2 (vc_2 0) vsource type=pulse val0=0 val1=1 period=tper delay=tper/8 \
+        rise=tr fall=tr width=tper/8-tr
+V1 (vc_1 0) vsource type=pulse val0=0 val1=1 period=tper delay=0 rise=tr \
+        fall=tr width=tper/8-tr
+simulatorOptions options reltol=1e-3 vabstol=1e-6 iabstol=1e-12 temp=27 \
+    tnom=27 scalem=1.0 scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 \
+    digits=5 cols=80 pivrel=1e-3 sensfile="../psf/sens.output" \
+    checklimitdest=psf 
+pss  pss  period=tper  harms=50  errpreset=conservative
++    tstab=_EXPR_1  maxacfreq=20G  annotate=status
+pac  pac  sweeptype=absolute  start=100e3  stop=10e9  dec=100
++    maxsideband=7  annotate=status  freqaxis=in  save=all
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts  where=rawfile
+saveOptions options save=allpub

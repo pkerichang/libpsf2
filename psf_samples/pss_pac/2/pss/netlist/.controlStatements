@@ -1,0 +1,15 @@
+simulatorOptions options reltol=1e-3 vabstol=1e-6 iabstol=1e-12 temp=27 \
+    tnom=27 scalem=1.0 scale=1.0 gmin=1e-12 rforce=1 maxnotes=5 maxwarns=5 \
+    digits=5 cols=80 pivrel=1e-3 sensfile="../psf/sens.output" \
+    checklimitdest=psf 
+pss  pss  period=tper  harms=50  errpreset=conservative
++    tstab=_EXPR_1  maxacfreq=20G  annotate=status
+pac  pac  sweeptype=absolute  start=100e3  stop=10e9  dec=100
++    maxsideband=7  annotate=status  freqaxis=in  save=all
+modelParameter info what=models where=rawfile
+element info what=inst where=rawfile
+outputParameter info what=output where=rawfile
+designParamVals info what=parameters where=rawfile
+primitives info what=primitives where=rawfile
+subckts info what=subckts  where=rawfile
+saveOptions options save=allpub

@@ -1,0 +1,512 @@
+
+Cadence (R) Virtuoso (R) Spectre (R) Circuit Simulator
+Version 15.1.0.644.isr13 64bit -- 22 Oct 2016
+Copyright (C) 1989-2016 Cadence Design Systems, Inc. All rights reserved worldwide. Cadence, Virtuoso and Spectre are registered trademarks of Cadence Design Systems, Inc. All others are the property of their respective holders.
+
+Includes RSA BSAFE(R) Cryptographic or Security Protocol Software from RSA Security, Inc.
+
+User: erichang   Host: bwrcr820-2.eecs.berkeley.edu   HostID: 2080343F   PID: 91572
+Memory  available: 21.1492 GB  physical: 270.8262 GB
+Linux   : Red Hat Enterprise Linux Server release 6.6 (Santiago)
+CPU Type: Intel(R) Xeon(R) CPU E5-4650 v2 @ 2.40GHz
+All processors running at 2399.9 MHz
+        Socket: Processors (Hyperthreaded Processor)
+        0:       0 ( 20 ),  2 ( 22 ),  4 ( 24 ),  6 ( 26 ),  8 ( 28 )
+                10 ( 30 ), 12 ( 32 ), 14 ( 34 ), 16 ( 36 ), 18 ( 38 )
+        1:       1 ( 21 ),  3 ( 23 ),  5 ( 25 ),  7 ( 27 ),  9 ( 29 )
+                11 ( 31 ), 13 ( 33 ), 15 ( 35 ), 17 ( 37 ), 19 ( 39 )
+        
+System load averages (1min, 5min, 15min) : 9.7 %, 9.4 %, 9.0 %
+Hyperthreading is enabled
+
+
+Simulating `input.scs' on bwrcr820-2.eecs.berkeley.edu at 8:12:57 AM, Mon Jan 16, 2017 (process id: 91572).
+Current working directory: /tools/scratch/erichang/simulation/adc_sampler_2/tran_test/adexl/results/data/Interactive.13/1/test/netlist
+Environment variable:
+    SPECTRE_DEFAULTS=-E
+Command line:
+    /tools/cadence/MMSIM/MMSIM151/tools/bin/spectre -64 input.scs  \
+        +escchars +log ../psf/spectre.out -format psfbin -raw ../psf  \
+        +lqtimeout 900 -maxw 5 -maxn 5 +logstatus
+
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libinfineon_sh.so ...
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libphilips_o_sh.so ...
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libphilips_sh.so ...
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libsparam_sh.so ...
+Loading /tools/cadence/MMSIM/MMSIM151/tools.lnx86/cmi/lib/64bit/5.0/libstmodels_sh.so ...
+Reading file:  /tools/scratch/erichang/simulation/adc_sampler_2/tran_test/adexl/results/data/Interactive.13/1/test/netlist/input.scs
+Reading file:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/configs/spectre.cfg
+Reading file:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/configs/mapsubckt.cfg
+Reading link:  /tools/tstech16/CLN16FFC/PDK/tsmcN16/../models/toplevel.scs
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/toplevel.scs.bwrc
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2_usage.scs
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2.scs
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/tmi.cfg
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2_aux.scs
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/res_metal.scs
+Time for NDB Parsing: CPU = 583.911 ms, elapsed = 804.584 ms.
+Time accumulated: CPU = 614.906 ms, elapsed = 804.59 ms.
+Peak resident memory used = 51.4 Mbytes.
+
+
+The CPU load for active processors is :
+        Spectre  0 (87.5 %)      1 (60.5 %)      2 (100.0 %)     3 (56.4 %)
+                 4 (85.2 %)      5 (55.8 %)      6 (66.3 %)      7 (53.2 %)
+                 8 (56.2 %)      9 (52.6 %)     10 (51.9 %)     11 (51.9 %)
+                12 (95.0 %)     13 (51.9 %)     14 (51.3 %)     15 (50.0 %)
+                16 (50.0 %)     17 (48.1 %)     18 (48.7 %)     19 (48.8 %)
+                20 (48.0 %)     21 (46.2 %)     22 (46.2 %)     23 (48.8 %)
+                24 (53.8 %)     25 (48.1 %)     26 (46.8 %)     27 (47.0 %)
+                28 (47.4 %)     29 (46.9 %)     30 (60.8 %)     31 (44.9 %)
+                32 (47.4 %)     33 (45.6 %)     34 (45.6 %)     35 (42.9 %)
+                36 (44.9 %)     37 (46.9 %)     38 (44.3 %)     39 (42.5 %)
+        Other   
+Reading link:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/ahdl/discipline.h
+Reading file:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/ahdl/disciplines.vams
+Reading link:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/ahdl/constants.h
+Reading file:  /tools/cadence/MMSIM/MMSIM151/tools.lnx86/spectre/etc/ahdl/constants.vams
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2_dir
+Reading file:  /tools/tstech16/CLN16FFC/PDK/models/cln16ffcll_1d8_sp_v0d9_2p2_age_dir
+
+
+Time for Elaboration: CPU = 135.979 ms, elapsed = 191.732 ms.
+Time accumulated: CPU = 750.885 ms, elapsed = 996.589 ms.
+Peak resident memory used = 69.3 Mbytes.
+
+Time for EDB Visiting: CPU = 0 s, elapsed = 690.937 us.
+Time accumulated: CPU = 751.884 ms, elapsed = 997.535 ms.
+Peak resident memory used = 69.6 Mbytes.
+
+
+Global user options:
+             reltol = 0.001
+            vabstol = 1e-06
+            iabstol = 1e-12
+               temp = 27
+               gmin = 1e-12
+             rforce = 1
+           maxnotes = 5
+           maxwarns = 5
+             digits = 5
+               cols = 80
+             pivrel = 0.001
+           sensfile = ../psf/sens.output
+     checklimitdest = psf
+               save = selected
+               tnom = 27
+             scalem = 1
+              scale = 1
+
+Scoped user options:
+
+Circuit inventory:
+              nodes 3
+          capacitor 2     
+           resistor 3     
+            vsource 1     
+
+Analysis and control statement inventory:
+                 ac 1     
+                 dc 2     
+               info 8     
+               tran 1     
+
+Output statements:
+             .probe 0     
+           .measure 0     
+               save 1     
+
+Time for parsing: CPU = 3 ms, elapsed = 4.73714 ms.
+Time accumulated: CPU = 755.884 ms, elapsed = 1.00264 s.
+Peak resident memory used = 70.6 Mbytes.
+
+~~~~~~~~~~~~~~~~~~~~~~
+Pre-Simulation Summary
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+
+*************************************************
+Transient Analysis `tran': time = (0 s -> 107 ns)
+*************************************************
+DC simulation time: CPU = 0 s, elapsed = 509.977 us.
+
+Opening the PSF file ../psf/tran.tran.tran ...
+Important parameter values:
+    start = 0 s
+    outputstart = 0 s
+    stop = 107 ns
+    step = 107 ps
+    maxstep = 1.07 ns
+    ic = all
+    useprevic = no
+    skipdc = no
+    reltol = 100e-06
+    abstol(V) = 1 uV
+    abstol(I) = 1 pA
+    temp = 27 C
+    tnom = 27 C
+    tempeffects = all
+    errpreset = conservative
+    method = gear2only
+    lteratio = 10
+    relref = alllocal
+    cmin = 0 F
+    gmin = 1 pS
+
+
+Output and IC/nodeset summary:
+                 save   1       (current)
+                 save   3       (voltage)
+
+    tran: time = 2.68 ns      (2.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 8.03 ns      (7.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 13.38 ns    (12.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 18.73 ns    (17.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 24.08 ns    (22.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 29.43 ns    (27.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 34.78 ns    (32.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 40.13 ns    (37.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 45.48 ns    (42.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 50.83 ns    (47.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 56.18 ns    (52.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 61.53 ns    (57.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 66.88 ns    (62.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 72.23 ns    (67.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 77.58 ns    (72.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 82.93 ns    (77.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 88.28 ns    (82.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 93.63 ns    (87.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 98.98 ns    (92.5 %), step = 10 ps       (9.35 m%)
+    tran: time = 104.3 ns    (97.5 %), step = 10 ps       (9.35 m%)
+Number of accepted tran steps =             10722
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Post-Transient Simulation Summary
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   -   Parasitics slow down simulation. To speed up, consider
+          add +postlayout on command line
+   -   To further speed up simulation, consider
+          add ++aps on command line
+   -   Non-default settings that could significantly slow down simulation
+          errpreset = conservative, default moderate
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+During simulation, the CPU load for active processors is :
+        Spectre  0 (92.5 %)      1 (60.0 %)      2 (100.0 %)     3 (55.7 %)
+                 4 (76.9 %)      5 (55.0 %)      6 (77.9 %)      7 (52.3 %)
+                 8 (56.4 %)      9 (51.5 %)     10 (53.0 %)     11 (51.1 %)
+                12 (89.6 %)     13 (50.4 %)     14 (52.3 %)     15 (48.1 %)
+                16 (51.1 %)     17 (47.7 %)     18 (49.2 %)     19 (45.9 %)
+                20 (49.6 %)     21 (46.6 %)     22 (48.1 %)     23 (47.4 %)
+                24 (52.7 %)     25 (47.4 %)     26 (52.7 %)     27 (46.3 %)
+                28 (48.1 %)     29 (46.3 %)     30 (56.1 %)     31 (44.7 %)
+                32 (46.9 %)     33 (45.5 %)     34 (47.0 %)     35 (41.4 %)
+                36 (45.5 %)     37 (45.5 %)     38 (44.7 %)     39 (40.9 %)
+        Other   
+Initial condition solution time: CPU = 0 s, elapsed = 566.006 us.
+Intrinsic tran analysis time:    CPU = 320.952 ms, elapsed = 325.24 ms.
+Total time required for tran analysis `tran': CPU = 322.951 ms, elapsed = 335.064 ms.
+Time accumulated: CPU = 1.08083 s, elapsed = 1.34317 s.
+Peak resident memory used = 72.3 Mbytes.
+
+finalTimeOP: writing operating point information to rawfile.
+
+Opening the PSF file ../psf/finalTimeOP.info ...
+
+******************
+DC Analysis `dcOp'
+******************
+
+Opening the PSF file ../psf/dcOp.dc ...
+Important parameter values:
+    reltol = 1e-03
+    abstol(V) = 1 uV
+    abstol(I) = 1 pA
+    temp = 27 C
+    tnom = 27 C
+    tempeffects = all
+    gmindc = 1 pS
+Convergence achieved in 2 iterations.
+DC simulation time: CPU = 1.08483 s, elapsed = 1.35038 s.
+Total time required for dc analysis `dcOp': CPU = 1.999 ms, elapsed = 3.74699 ms.
+Time accumulated: CPU = 1.08483 s, elapsed = 1.3509 s.
+Peak resident memory used = 72.4 Mbytes.
+
+dcOpInfo: writing operating point information to rawfile.
+
+Opening the PSF file ../psf/dcOpInfo.info ...
+
+********************************
+DC Analysis `dc': vdc = (0 -> 1)
+********************************
+
+Opening the PSF file ../psf/dc.dc ...
+Important parameter values:
+    reltol = 1e-03
+    abstol(V) = 1 uV
+    abstol(I) = 1 pA
+    temp = 27 C
+    tnom = 27 C
+    tempeffects = all
+    gmindc = 1 pS
+    dc: vdc = 28.9e-03    (2.89 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 34.68e-03   (3.47 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 40.46e-03   (4.05 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 46.24e-03   (4.62 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 52.02e-03    (5.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 57.8e-03    (5.78 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 63.58e-03   (6.36 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 69.36e-03   (6.94 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 75.14e-03   (7.51 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 80.92e-03   (8.09 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 86.71e-03   (8.67 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 92.49e-03   (9.25 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 98.27e-03   (9.83 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 104e-03     (10.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 109.8e-03     (11 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 115.6e-03   (11.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 121.4e-03   (12.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 127.2e-03   (12.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 132.9e-03   (13.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 138.7e-03   (13.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 144.5e-03   (14.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 150.3e-03     (15 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 156.1e-03   (15.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 161.8e-03   (16.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 167.6e-03   (16.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 173.4e-03   (17.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 179.2e-03   (17.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 185e-03     (18.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 190.8e-03   (19.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 196.5e-03   (19.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 202.3e-03   (20.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 208.1e-03   (20.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 213.9e-03   (21.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 219.7e-03     (22 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 225.4e-03   (22.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 231.2e-03   (23.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 237e-03     (23.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 242.8e-03   (24.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 248.6e-03   (24.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 254.3e-03   (25.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 260.1e-03     (26 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 265.9e-03   (26.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 271.7e-03   (27.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 277.5e-03   (27.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 283.2e-03   (28.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 289e-03     (28.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 294.8e-03   (29.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 300.6e-03   (30.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 306.4e-03   (30.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 312.1e-03   (31.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 317.9e-03   (31.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 323.7e-03   (32.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 329.5e-03   (32.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 335.3e-03   (33.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 341e-03     (34.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 346.8e-03   (34.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 352.6e-03   (35.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 358.4e-03   (35.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 364.2e-03   (36.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 369.9e-03     (37 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 375.7e-03   (37.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 381.5e-03   (38.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 387.3e-03   (38.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 393.1e-03   (39.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 398.8e-03   (39.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 404.6e-03   (40.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 410.4e-03     (41 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 416.2e-03   (41.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 422e-03     (42.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 427.7e-03   (42.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 433.5e-03   (43.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 439.3e-03   (43.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 445.1e-03   (44.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 450.9e-03   (45.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 456.6e-03   (45.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 462.4e-03   (46.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 468.2e-03   (46.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 474e-03     (47.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 479.8e-03     (48 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 485.5e-03   (48.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 491.3e-03   (49.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 497.1e-03   (49.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 502.9e-03   (50.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 508.7e-03   (50.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 514.5e-03   (51.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 520.2e-03     (52 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 526e-03     (52.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 531.8e-03   (53.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 537.6e-03   (53.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 543.4e-03   (54.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 549.1e-03   (54.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 554.9e-03   (55.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 560.7e-03   (56.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 566.5e-03   (56.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 572.3e-03   (57.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 578e-03     (57.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 583.8e-03   (58.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 589.6e-03     (59 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 595.4e-03   (59.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 601.2e-03   (60.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 606.9e-03   (60.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 612.7e-03   (61.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 618.5e-03   (61.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 624.3e-03   (62.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 630.1e-03     (63 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 635.8e-03   (63.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 641.6e-03   (64.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 647.4e-03   (64.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 653.2e-03   (65.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 659e-03     (65.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 664.7e-03   (66.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 670.5e-03   (67.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 676.3e-03   (67.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 682.1e-03   (68.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 687.9e-03   (68.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 693.6e-03   (69.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 699.4e-03   (69.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 705.2e-03   (70.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 711e-03     (71.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 716.8e-03   (71.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 722.5e-03   (72.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 728.3e-03   (72.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 734.1e-03   (73.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 739.9e-03     (74 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 745.7e-03   (74.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 751.4e-03   (75.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 757.2e-03   (75.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 763e-03     (76.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 768.8e-03   (76.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 774.6e-03   (77.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 780.3e-03     (78 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 786.1e-03   (78.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 791.9e-03   (79.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 797.7e-03   (79.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 803.5e-03   (80.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 809.2e-03   (80.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 815e-03     (81.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 820.8e-03   (82.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 826.6e-03   (82.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 832.4e-03   (83.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 838.2e-03   (83.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 843.9e-03   (84.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 849.7e-03     (85 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 855.5e-03   (85.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 861.3e-03   (86.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 867.1e-03   (86.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 872.8e-03   (87.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 878.6e-03   (87.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 884.4e-03   (88.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 890.2e-03     (89 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 896e-03     (89.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 901.7e-03   (90.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 907.5e-03   (90.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 913.3e-03   (91.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 919.1e-03   (91.9 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 924.9e-03   (92.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 930.6e-03   (93.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 936.4e-03   (93.6 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 942.2e-03   (94.2 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 948e-03     (94.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 953.8e-03   (95.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 959.5e-03     (96 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 965.3e-03   (96.5 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 971.1e-03   (97.1 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 976.9e-03   (97.7 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 982.7e-03   (98.3 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 988.4e-03   (98.8 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 994.2e-03   (99.4 %), step = 5.78e-03     (578 m%)
+    dc: vdc = 1            (100 %), step = 5.78e-03     (578 m%)
+DC simulation time: CPU = 1.11083 s, elapsed = 1.38081 s.
+Total time required for dc analysis `dc': CPU = 24.996 ms, elapsed = 26.6659 ms.
+Time accumulated: CPU = 1.11183 s, elapsed = 1.38181 s.
+Peak resident memory used = 72.5 Mbytes.
+
+
+********************************************
+AC Analysis `ac': freq = (10 kHz -> 100 GHz)
+********************************************
+
+Opening the PSF file ../psf/ac.ac ...
+    ac: freq = 19.05 kHz      (4 %), step = 5.251 kHz       (2 %)
+    ac: freq = 26.3 kHz       (6 %), step = 7.248 kHz       (2 %)
+    ac: freq = 36.31 kHz      (8 %), step = 10.01 kHz       (2 %)
+    ac: freq = 50.12 kHz     (10 %), step = 13.81 kHz       (2 %)
+    ac: freq = 69.18 kHz     (12 %), step = 19.06 kHz       (2 %)
+    ac: freq = 95.5 kHz      (14 %), step = 26.32 kHz       (2 %)
+    ac: freq = 131.8 kHz     (16 %), step = 36.33 kHz       (2 %)
+    ac: freq = 182 kHz       (18 %), step = 50.14 kHz       (2 %)
+    ac: freq = 251.2 kHz     (20 %), step = 69.22 kHz       (2 %)
+    ac: freq = 346.7 kHz     (22 %), step = 95.55 kHz       (2 %)
+    ac: freq = 478.6 kHz     (24 %), step = 131.9 kHz       (2 %)
+    ac: freq = 660.7 kHz     (26 %), step = 182.1 kHz       (2 %)
+    ac: freq = 912 kHz       (28 %), step = 251.3 kHz       (2 %)
+    ac: freq = 1.259 MHz     (30 %), step = 346.9 kHz       (2 %)
+    ac: freq = 1.738 MHz     (32 %), step = 478.9 kHz       (2 %)
+    ac: freq = 2.399 MHz     (34 %), step = 661 kHz         (2 %)
+    ac: freq = 3.311 MHz     (36 %), step = 912.5 kHz       (2 %)
+    ac: freq = 4.571 MHz     (38 %), step = 1.26 MHz        (2 %)
+    ac: freq = 6.31 MHz      (40 %), step = 1.739 MHz       (2 %)
+    ac: freq = 8.71 MHz      (42 %), step = 2.4 MHz         (2 %)
+    ac: freq = 12.02 MHz     (44 %), step = 3.313 MHz       (2 %)
+    ac: freq = 16.6 MHz      (46 %), step = 4.573 MHz       (2 %)
+    ac: freq = 22.91 MHz     (48 %), step = 6.313 MHz       (2 %)
+    ac: freq = 31.62 MHz     (50 %), step = 8.714 MHz       (2 %)
+    ac: freq = 43.65 MHz     (52 %), step = 12.03 MHz       (2 %)
+    ac: freq = 60.26 MHz     (54 %), step = 16.6 MHz        (2 %)
+    ac: freq = 83.18 MHz     (56 %), step = 22.92 MHz       (2 %)
+    ac: freq = 114.8 MHz     (58 %), step = 31.64 MHz       (2 %)
+    ac: freq = 158.5 MHz     (60 %), step = 43.67 MHz       (2 %)
+    ac: freq = 218.8 MHz     (62 %), step = 60.29 MHz       (2 %)
+    ac: freq = 302 MHz       (64 %), step = 83.22 MHz       (2 %)
+    ac: freq = 416.9 MHz     (66 %), step = 114.9 MHz       (2 %)
+    ac: freq = 575.4 MHz     (68 %), step = 158.6 MHz       (2 %)
+    ac: freq = 794.3 MHz     (70 %), step = 218.9 MHz       (2 %)
+    ac: freq = 1.096 GHz     (72 %), step = 302.1 MHz       (2 %)
+    ac: freq = 1.514 GHz     (74 %), step = 417.1 MHz       (2 %)
+    ac: freq = 2.089 GHz     (76 %), step = 575.7 MHz       (2 %)
+    ac: freq = 2.884 GHz     (78 %), step = 794.7 MHz       (2 %)
+    ac: freq = 3.981 GHz     (80 %), step = 1.097 GHz       (2 %)
+    ac: freq = 5.495 GHz     (82 %), step = 1.514 GHz       (2 %)
+    ac: freq = 7.586 GHz     (84 %), step = 2.09 GHz        (2 %)
+    ac: freq = 10.47 GHz     (86 %), step = 2.886 GHz       (2 %)
+    ac: freq = 14.45 GHz     (88 %), step = 3.983 GHz       (2 %)
+    ac: freq = 19.95 GHz     (90 %), step = 5.498 GHz       (2 %)
+    ac: freq = 27.54 GHz     (92 %), step = 7.59 GHz        (2 %)
+    ac: freq = 38.02 GHz     (94 %), step = 10.48 GHz       (2 %)
+    ac: freq = 52.48 GHz     (96 %), step = 14.46 GHz       (2 %)
+    ac: freq = 72.44 GHz     (98 %), step = 19.96 GHz       (2 %)
+    ac: freq = 100 GHz      (100 %), step = 27.56 GHz       (2 %)
+Accumulated DC solution time = 0 s.
+Intrinsic ac analysis time =              0 s.
+Total time required for ac analysis `ac': CPU = 4 ms, elapsed = 5.86104 ms.
+Time accumulated: CPU = 1.11683 s, elapsed = 1.38857 s.
+Peak resident memory used = 72.6 Mbytes.
+
+modelParameter: writing model parameter values to rawfile.
+
+Opening the PSF file ../psf/modelParameter.info ...
+element: writing instance parameter values to rawfile.
+
+Opening the PSF file ../psf/element.info ...
+outputParameter: writing output parameter values to rawfile.
+
+Opening the PSF file ../psf/outputParameter.info ...
+designParamVals: writing netlist parameters to rawfile.
+
+Opening the PSFASCII file ../psf/designParamVals.info ...
+primitives: writing primitives to rawfile.
+
+Opening the PSFASCII file ../psf/primitives.info.primitives ...
+subckts: writing subcircuits to rawfile.
+
+Opening the PSFASCII file ../psf/subckts.info.subckts ...
+
+Aggregate audit (8:12:59 AM, Mon Jan 16, 2017):
+Time used: CPU = 1.17 s, elapsed = 1.46 s, util. = 80.1%.
+Time spent in licensing: elapsed = 31.6 ms.
+Peak memory used = 75.7 Mbytes.
+Simulation started at: 8:12:57 AM, Mon Jan 16, 2017, ended at: 8:12:59 AM, Mon Jan 16, 2017, with elapsed time (wall clock): 1.46 s.
+spectre completes with 0 errors, 0 warnings, and 0 notices.

@@ -1,0 +1,330 @@
+HEADER
+"PSFversion" "1.00"
+"Log Generator" "drlLog rev. 1.0"
+"Log Time Stamp" "Wed Jan 11 08:05:11 2017"
+"simulator" "spectre"
+"version" "15.1.0.644.isr13"
+"date" "8:05:11 AM, Wed Jan 11, 2017"
+"design" "// Generated for: spectre"
+"signalNameType" "spectre"
+"simMode" "Spectre"
+"measdgt" 0
+"ingold" 2
+"sst2usecolon" 0
+TYPE
+"analysisInst" STRUCT(
+"analysisType" STRING *
+"dataFile" STRING *
+"format" STRING *
+"parent" STRING *
+"sweepVariable" ARRAY ( * ) STRING *
+"description" STRING *
+)
+VALUE
+"pss-td.pss" "analysisInst" (
+"td.pss"
+"pss.td.pss"
+"PSF"
+""
+("time")
+"Periodic Steady-State Analysis `pss': time = (0 s -> 800 ps)"
+) PROP(
+"data_type" "swept_scalar"
+)
+
+"pss-fd.pss" "analysisInst" (
+"fd.pss"
+"pss.fd.pss"
+"PSF"
+""
+("freq")
+"Periodic Steady-State Analysis `pss': fund = 1.25 GHz"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental"
+)
+
+"pac-pac" "analysisInst" (
+"pac"
+"pac.pac"
+"PSF"
+""
+("harmonic")
+"pac parent"
+) PROP(
+"sweep_tree_type" "sweepNode"
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+)
+
+"pac.-7-pac" "analysisInst" (
+"pac"
+"pac.-7.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" -7.00000
+)
+
+"pac.-6-pac" "analysisInst" (
+"pac"
+"pac.-6.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" -6.00000
+)
+
+"pac.-5-pac" "analysisInst" (
+"pac"
+"pac.-5.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" -5.00000
+)
+
+"pac.-4-pac" "analysisInst" (
+"pac"
+"pac.-4.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" -4.00000
+)
+
+"pac.-3-pac" "analysisInst" (
+"pac"
+"pac.-3.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" -3.00000
+)
+
+"pac.-2-pac" "analysisInst" (
+"pac"
+"pac.-2.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" -2.00000
+)
+
+"pac.-1-pac" "analysisInst" (
+"pac"
+"pac.-1.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" -1.00000
+)
+
+"pac.0-pac" "analysisInst" (
+"pac"
+"pac.0.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" 0.00000
+)
+
+"pac.1-pac" "analysisInst" (
+"pac"
+"pac.1.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" 1.00000
+)
+
+"pac.2-pac" "analysisInst" (
+"pac"
+"pac.2.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" 2.00000
+)
+
+"pac.3-pac" "analysisInst" (
+"pac"
+"pac.3.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" 3.00000
+)
+
+"pac.4-pac" "analysisInst" (
+"pac"
+"pac.4.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" 4.00000
+)
+
+"pac.5-pac" "analysisInst" (
+"pac"
+"pac.5.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" 5.00000
+)
+
+"pac.6-pac" "analysisInst" (
+"pac"
+"pac.6.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" 6.00000
+)
+
+"pac.7-pac" "analysisInst" (
+"pac"
+"pac.7.pac"
+"PSF"
+"pac-pac"
+("freq")
+"Periodic AC Analysis `pac': freq = (100 kHz -> 10 GHz)"
+) PROP(
+"data_type" "swept_scalar"
+"harmonic_type" "fundamental_sweep"
+"sweep_tree_type" "leafNode"
+"harmonic" 7.00000
+)
+
+"modelParameter-info" "analysisInst" (
+"info"
+"modelParameter.info"
+"PSF"
+""
+()
+"Circuit Information"
+) PROP(
+"data_type" "struct"
+)
+
+"element-info" "analysisInst" (
+"info"
+"element.info"
+"PSF"
+""
+()
+"Circuit Information"
+) PROP(
+"data_type" "struct"
+)
+
+"outputParameter-info" "analysisInst" (
+"info"
+"outputParameter.info"
+"PSF"
+""
+()
+"Circuit Information"
+) PROP(
+"data_type" "struct"
+)
+
+"designParamVals-info" "analysisInst" (
+"info"
+"designParamVals.info"
+"PSF"
+""
+()
+"Circuit Information"
+) PROP(
+"data_type" "struct"
+)
+
+"primitives-info.primitives" "analysisInst" (
+"info.primitives"
+"primitives.info.primitives"
+"PSF"
+""
+()
+"Circuit Information"
+)
+"subckts-info.subckts" "analysisInst" (
+"info.subckts"
+"subckts.info.subckts"
+"PSF"
+""
+()
+"Circuit Information"
+)
+END

@@ -1,5 +1,4 @@
 *~
-
-build
-linux_build
+*.log
+*.hdf5
 

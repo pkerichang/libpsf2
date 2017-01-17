@@ -1,0 +1,56 @@
+HEADER
+"PSFversion" "1.00"
+"simulator" "spectre"
+"version" "15.1.0.644.isr13"
+"date" "8:05:04 AM, Wed Jan 11, 2017"
+"design" "// Generated for: spectre"
+"analysis type" "info.primitives"
+"analysis name" "primitives"
+"analysis description" "Circuit Information"
+"xVecSorted" "unknown"
+"tolerance.relative" 0.00100000
+TYPE
+"primitive" STRUCT(
+"model" STRING *
+"oppoint" STRING *
+"output" STRING *
+"inst" STRING *
+"region" STRING *
+"terminals" STRING *
+) PROP(
+"key" "prim"
+)
+VALUE
+"capacitor" "primitive" (
+"c trise tnom w l etch cj cjsw scalec rforce di thick coeffs symmetric min max tc1 tc2 shrink shrink2 bv_max "
+"cap "
+"tempeff meff leff weff ceff "
+"c w l m scale trise tc1 tc2 ic area perim coeffs symmetric bv_max scalec "
+""
+"1 2 "
+)
+"isource" "primitive" (
+""
+"i v pwr "
+"tempeff "
+"dc type fundname delay edgetype val0 val1 period rise fall width file offset scale stretch rms pwlfilter rolloff pwlbandwidth allbrkpts pwlperiod pwlperiodstart twidth sinedc ampl freq sinephase ampl2 freq2 sinephase2 fundname2 iqmodfiles fmmodindex fmmodfreq fmmodfiles ammodindex ammodoffset ammodfreq ammodphase damp freqvec amplvec phasevec maxharms td1 tau1 td2 tau2 expperiod data rptstart rpttimes td01 td10 ref jitter rjseed rjrms pjamp pjfreq pjtype seed taps lfsrtaps lfsrseed registerlength triggerthreshold triggerdelthresh triggerdirection transitionreference noisefile noisetype noiseinterp isnoisy mag phase xfmag pacmag pacphase m tc1 tc2 tnom trise "
+""
+"sink src ctlp ctln "
+)
+"relay" "primitive" (
+"vt1 vt2 ropen rclosed hysteresis vth trans "
+"region res "
+""
+"vt1 vt2 ropen rclosed m "
+"off on "
+"1 2 ps ns "
+)
+"vsource" "primitive" (
+""
+"v i pwr "
+"tempeff "
+"dc type fundname delay edgetype val0 val1 period rise fall width file offset scale stretch rms pwlfilter rolloff pwlbandwidth allbrkpts pwlperiod pwlperiodstart twidth sinedc ampl freq sinephase ampl2 freq2 sinephase2 fundname2 iqmodfiles fmmodindex fmmodfreq fmmodfiles ammodindex ammodoffset ammodfreq ammodphase damp freqvec amplvec phasevec maxharms td1 tau1 td2 tau2 expperiod data rptstart rpttimes td01 td10 ref jitter rjseed rjrms pjamp pjfreq pjtype seed taps lfsrtaps lfsrseed registerlength triggerthreshold triggerdelthresh triggerdirection transitionreference noisefile noisetype noiseinterp isnoisy mag phase xfmag pacmag pacphase m tc1 tc2 tnom trise "
+""
+"p n ctlp ctln "
+)
+END

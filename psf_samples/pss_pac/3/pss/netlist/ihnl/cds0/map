@@ -1,0 +1,51 @@
+( ( nil
+  version "2.1"
+  mapType "incremental"
+  repList "spectre cmos_sch cmos.sch schematic veriloga"
+  stopList "spectre"
+  hierDelim "."
+ )
+( net
+( "vout<8>" "vout_8" )
+( "vc<3>" "vc_3" )
+( "vc<8>" "vc_8" )
+( "vout<1>" "vout_1" )
+( "vout<2>" "vout_2" )
+( "vc<1>" "vc_1" )
+( "vc<7>" "vc_7" )
+( "vc<6>" "vc_6" )
+( "vout<6>" "vout_6" )
+( "vout<3>" "vout_3" )
+( "vc<2>" "vc_2" )
+( "vc<5>" "vc_5" )
+( "vout<4>" "vout_4" )
+( "vout<5>" "vout_5" )
+( "vc<4>" "vc_4" )
+( "vout<7>" "vout_7" )
+( "gnd!" "0" )
+ )
+( inst
+( "C0<7>" "C0_7" )
+( "C0<6>" "C0_6" )
+( "W0<3>" "W0_3" )
+( "W0<2>" "W0_2" )
+( "C0<1>" "C0_1" )
+( "W0<4>" "W0_4" )
+( "W0<1>" "W0_1" )
+( "C0<5>" "C0_5" )
+( "C0<2>" "C0_2" )
+( "C0<3>" "C0_3" )
+( "W0<5>" "W0_5" )
+( "W0<7>" "W0_7" )
+( "W0<8>" "W0_8" )
+( "C0<4>" "C0_4" )
+( "C0<8>" "C0_8" )
+( "W0<6>" "W0_6" )
+ )
+( model
+ )
+( term
+ )
+( param
+ )
+ )

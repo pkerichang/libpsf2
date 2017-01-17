@@ -1,0 +1,93 @@
+HEADER
+"PSFversion" "1.00"
+"Run Generator" "drlRun rev. 1.0"
+"Run Time Stamp" "Jan 11 08:05:16 2017"
+"date" "Jan 11 08:05:16 2017"
+"simulator" "spectre"
+"netlistDir" "../netlist"
+"axlParamFlag" "true"
+TYPE
+"runObject" STRUCT(
+"logName" ARRAY( * ) STRING *
+"parent" STRING *
+"sweepVariable" ARRAY( * ) STRING *
+) PROP( "key" "runObject" )
+VALUE
+"Root" "runObject" (
+("")
+""
+("cl")
+)
+"cl=6.4e-14" "runObject" (
+("")
+"Root"
+("ron")
+) PROP(
+ "cl" 6.400000e-14
+)
+
+"cl=6.4e-14,ron=80.0" "runObject" (
+(
+"../../../1/pss/psf/logFile"
+"../../../1/pss/psf/artistLogFile"
+)
+"cl=6.4e-14"
+()
+) PROP(
+"Corner" "nom"
+"netlistDir" "../../../1/pss/netlist"
+"dataDir" "../../../1/pss"
+ "ron" 8.000000e+01
+)
+
+"cl=1.28e-13" "runObject" (
+("")
+"Root"
+("ron")
+) PROP(
+ "cl" 1.280000e-13
+)
+
+"cl=1.28e-13,ron=80.0" "runObject" (
+(
+"../../../3/pss/psf/logFile"
+"../../../3/pss/psf/artistLogFile"
+)
+"cl=1.28e-13"
+()
+) PROP(
+"Corner" "nom"
+"netlistDir" "../../../3/pss/netlist"
+"dataDir" "../../../3/pss"
+ "ron" 8.000000e+01
+)
+
+"cl=6.4e-14,ron=170.0" "runObject" (
+(
+"../../../2/pss/psf/logFile"
+"../../../2/pss/psf/artistLogFile"
+)
+"cl=6.4e-14"
+()
+) PROP(
+"Corner" "nom"
+"netlistDir" "../../../2/pss/netlist"
+"dataDir" "../../../2/pss"
+ "ron" 1.700000e+02
+)
+
+"cl=1.28e-13,ron=170.0" "runObject" (
+(
+"../../../4/pss/psf/logFile"
+"../../../4/pss/psf/artistLogFile"
+)
+"cl=1.28e-13"
+()
+) PROP(
+"Corner" "nom"
+"netlistDir" "../../../4/pss/netlist"
+"dataDir" "../../../4/pss"
+ "ron" 1.700000e+02
+)
+
+END
