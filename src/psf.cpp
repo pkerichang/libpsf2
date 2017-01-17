@@ -206,7 +206,7 @@ namespace psf {
             if (win_size == 0) {
                 LOG(TRACE) << "Reading values (sweep simple)";
                 read_values_swp_simple(data, h5_file.get(), out_dsets.get(), num_points_data,
-                    max_data_size, out_types.get(), type_map.get());
+                    static_cast<uint32_t>(max_data_size), out_types.get(), type_map.get());
             }
             else {
                 LOG(TRACE) << "Reading values (sweep windowed)";
@@ -505,7 +505,7 @@ namespace psf {
                 (*itd)->write(buffer.get(), (*itv).m_h5_read_type, mem_space, file_space);
             }
             // update number of points read
-            points_read += mem_count[0];
+            points_read += static_cast<uint32_t>(mem_count[0]);
         }
     }
 
@@ -539,7 +539,7 @@ namespace psf {
             for (; itv != type_list->end(); ++itv, ++itd) {
                 uint32_t code = read_uint32(data);
                 uint32_t var_id = read_uint32(data);
-                uint32_t cur_size = (*itv).m_h5_read_type.getSize();
+                size_t cur_size = (*itv).m_h5_read_type.getSize();
                 data.read(buffer.get(), cur_size);
                 (*itd)->write(buffer.get(), (*itv).m_h5_read_type, mem_space, file_space);
             }

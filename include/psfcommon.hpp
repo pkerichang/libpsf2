@@ -1,5 +1,8 @@
 #ifndef LIBPSF_COMMON_H_
 #define LIBPSF_COMMON_H_
+// disable min/max MACRO definition on windows, which prevents you from calling std::min/max.
+#define NOMINMAX
+
 
 /**
  *  This header file define methods to read primitive types from binary file.

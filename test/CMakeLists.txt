@@ -3,6 +3,9 @@
 set(SOURCES
     test.cpp
     )
+  
+# build test executable
+add_executable(testpsf ${SOURCES})
 
 # setup include directories
 include_directories(${CMAKE_SOURCE_DIR}/include
@@ -10,9 +13,6 @@ include_directories(${CMAKE_SOURCE_DIR}/include
                     # ${Boost_INCLUDE_DIR}
 		    ${CMAKE_SOURCE_DIR}/easyloggingpp/src
                     )
-  
-# build test executable
-add_executable(testpsf ${SOURCES})
 
 # test executable dependencies (transitive)
 target_link_libraries(testpsf 
