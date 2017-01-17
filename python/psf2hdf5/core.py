@@ -46,7 +46,7 @@ def parse_adexl_results(results_dir):
     pprint.pprint(prop_dict)
 
     # STEP 2: get all simulation directories
-    # STEP @A: read runObjFile
+    # STEP 2A: read runObjFile
     val_dict, prop_dict = parse_psf_ascii(os.path.join(dirname, RUN_OBJ))
     pprint.pprint(val_dict)
     pprint.pprint(prop_dict)
