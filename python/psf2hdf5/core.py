@@ -33,8 +33,8 @@ def parse_adexl_results(results_dir):
     # STEP 1B: find variables file name
     var_file_name = ''
     for val in val_dict.values():
-        if val['analysisType'] == 'design_variables':
-            var_file_name = val['dataFile']
+        if val['value']['analysisType'] == 'design_variables':
+            var_file_name = val['value']['dataFile']
             break
     if not var_file_name:
         raise Exception('Cannot find design variable file')

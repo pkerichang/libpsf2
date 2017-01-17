@@ -12,29 +12,23 @@ import pyparsing as pp
 # header section definitions
 # a quoted string.
 quoted_string = pp.QuotedString('"', escChar='\\', unquoteResults=True)
-# a floating point number or integer
-number = pp.Regex('[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?').setParseAction(lambda toks: float(toks[0]))
+# a floating point number or integer.  replace string by float
+number = pp.Regex('[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?').setParseAction(lambda toks: [float(toks[0])])
 # property values can either be a string or an int/double.
 prop_value = quoted_string | number
-# property entry is name followed by value
-prop_entry = (quoted_string + prop_value).setParseAction(lambda toks: (toks[0], toks[1]))
 # property dictionary is a list of name/value pairs
-prop_dict = pp.ZeroOrMore(prop_entry).setParseAction(lambda toks: dict(toks.asList()))
+prop_dict = pp.dictOf(quoted_string, prop_value)
 # header section is HEADER followed by properties.
 header_section = pp.Literal("HEADER").suppress() + prop_dict
-# set header to directly return property dictionary.
-header_section = header_section.setParseAction(lambda toks: toks[0])
 
 # type section definitions
 # type length is either * for variable, or DOUBLE/SINGLE.
 type_length = pp.Literal('*') | pp.Literal('DOUBLE') | pp.Literal('SINGLE')
 # type is either string or float
 type_name = pp.Literal('STRING') | pp.Literal('FLOAT')
-# an array type is defined by presence of the string "ARRAY ( * )"
-is_array = (pp.Literal('ARRAY').setParseAction(lambda toks: True) +
-            pp.Literal('(').suppress() +
-            pp.Literal('*').suppress() +
-            pp.Literal(')').suppress())
+# an array type is defined by presence of the string "ARRAY ( * )"  just return a single True token.
+is_array = (pp.Literal('ARRAY') + pp.Literal('(') + pp.Literal('*') +
+            pp.Literal(')')).setParseAction(lambda toks: [True])
 # a type definition is an optional array identifier, followed by type name and length.
 type_info = (pp.Optional(is_array, default=False)('is_array') +
              type_name('type_name') +
@@ -81,8 +75,9 @@ class TypeInfo(object):
 
         if self.is_array:
             # wrap parser in array
+            # NOTE: we group array so they don't get merged with others.
             self.parser = (pp.Literal('(').suppress() +
-                           pp.ZeroOrMore(pp.Group(self.parser)) +
+                           pp.Group(pp.ZeroOrMore(self.parser)) +
                            pp.Literal(')').suppress())
 
     def __repr__(self):
@@ -96,21 +91,26 @@ class StructDef(object):
     def __init__(self, parse_result):
         self.members = [ClassDef(v) for v in parse_result['members']]
 
-        # struct value parse is just the members' value parsers in order...
-        print(self.members)
-        value_parser = self.members[0].class_type.parser(self.members[0].class_name)
+        # struct value parse is just the members' value parsers in order surrounding by parenthesis
+        value_parser = self.members[0].class_type.parser
         for cdef in self.members[1:]:
-            value_parser += cdef.class_type.parser(cdef.class_name)
-        # ...surround by parennthesis
+            value_parser += cdef.class_type.parser
         self.parser = (pp.Literal('(').suppress() +
                        value_parser +
                        pp.Literal(')').suppress())
 
-        # set parser to return dictionary.
-        # NOTE: for some reason, if pyparsing.QuotedString strips quotes and parses empty string,
-        # it will not show up in parsed results.  This lambda function fixes that.
-        self.parser = self.parser.setParseAction(lambda toks: {m.class_name: toks.get(m.class_name, '')
-                                                               for m in self.members})
+        # modify return value to be a key-value pair list
+        def modify_tokens(toks):
+            ans = {}
+            for idx, m in enumerate(self.members):
+                val = toks[idx]
+                if isinstance(val, pp.ParseResults):
+                    # array value, convert to list
+                    val = val.asList()
+                ans[m.class_name] = val
+            return ans
+
+        self.parser = self.parser.setParseAction(modify_tokens)
 
     def __repr__(self):
         member_str = '\n\t'.join((repr(m) for m in self.members))
@@ -161,20 +161,27 @@ def make_value_section_parser(type_results):
         value_parser |= cdef.parser
 
     # There can be an optional PROP section at the end.
+    # NOTE: use setParseAction to keep dictionary structure intact.
     prop_parser = (pp.Literal('PROP').suppress() +
                    pp.Literal('(').suppress() +
                    prop_dict +
-                   pp.Literal(')'))
-    value_parser = value_parser + pp.Optional(prop_parser)('properties')
+                   pp.Literal(')')).setParseAction(lambda toks: toks.asDict())
+
+    # NOTE: Group value and property separately so properties field won't merge
+    # with value field.
+    value_parser = pp.Group(value_parser)('value') + pp.Group(pp.Optional(prop_parser, default={}))('properties')
+
+    # unwrap the group so asDict() converts correctly.
+    def format_value(toks):
+        return {'value': toks[0][0], 'properties': toks[1][0]}
+
+    value_parser.setParseAction(format_value)
 
     # VALUE section is just a list of variable name followed by its value/properties.
-    value_entry = (quoted_string + value_parser).setParseAction(lambda toks: (toks[0], toks[1]))
-    # convert parsed output to dictionary.
-    val_dict = pp.OneOrMore(value_entry).setParseAction(lambda toks: dict(toks.asList()))
+    val_dict = pp.dictOf(quoted_string, value_parser)
 
     # add VALUE and END tags
     val_section = pp.Literal('VALUE').suppress() + val_dict + pp.Literal('END').suppress()
-    val_section = val_section.setParseAction(lambda toks: toks[0])
     return val_section
 
 
@@ -195,4 +202,4 @@ def parse_psf_ascii(file_name):
     results = val_parser.parseString(content[pos:], parseAll=True)
 
     # return values and header properties
-    return results[0], properties
+    return results.asDict(), properties.asDict()
