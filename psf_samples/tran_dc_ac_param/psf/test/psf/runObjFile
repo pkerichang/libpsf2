@@ -18,6 +18,8 @@ VALUE
 ""
 ("cap")
 )
+
+
 "cap=1e-12" "runObject" (
 ("")
 "Root"
@@ -25,6 +27,7 @@ VALUE
 ) PROP(
  "cap" 1.000000e-12
 )
+
 
 "cap=1e-12,res=500.0" "runObject" (
 (
@@ -39,6 +42,8 @@ VALUE
 "dataDir" "../../../1/test"
  "res" 5.000000e+02
 )
+
+
 
 "cap=1e-11" "runObject" (
 ("")
